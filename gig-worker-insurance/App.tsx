@@ -1,10 +1,18 @@
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from './src/theme';
+import PolicySelectionScreen from './src/screens/PolicySelectionScreen';
 
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<'Home' | 'PolicySelection'>('Home');
+
+  if (currentScreen === 'PolicySelection') {
+    return <PolicySelectionScreen onBack={() => setCurrentScreen('Home')} />;
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
@@ -107,6 +115,24 @@ export default function App() {
           </View>
         </View>
 
+        {/* --- ADDED POLICY TIERS BUTTON --- */}
+        <View style={{ paddingHorizontal: theme.spacing.m, marginBottom: theme.spacing.m }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: theme.colors.primary,
+              padding: 16,
+              borderRadius: theme.borderRadius.m,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+            onPress={() => setCurrentScreen('PolicySelection')}
+          >
+            <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>View Policy Tiers (Premium, Mid, Pro)</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+
         {/* --- MORE PRODUCTS HORIZONTAL SCROLL --- */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>More Coverages for you</Text>
@@ -124,7 +150,7 @@ export default function App() {
               <Text style={styles.miniCardSub}>Auto-payout when > 45°C. In just a few clicks!</Text>
               <View style={styles.miniCardLinkRow}>
                 <Text style={styles.miniCardLink}>Add cover</Text>
-                <View style={styles.linkArrow}><Ionicons name="arrow-up-right" size={10} color="#FFF" /></View>
+                <View style={styles.linkArrow}><Ionicons name="arrow-forward" size={10} color="#FFF" /></View>
               </View>
             </LinearGradient>
           </View>
@@ -139,7 +165,7 @@ export default function App() {
               <Text style={styles.miniCardSub}>Safety net when the market is closed!</Text>
               <View style={styles.miniCardLinkRow}>
                 <Text style={styles.miniCardLink}>Add cover</Text>
-                <View style={styles.linkArrow}><Ionicons name="arrow-up-right" size={10} color="#FFF" /></View>
+                <View style={styles.linkArrow}><Ionicons name="arrow-forward" size={10} color="#FFF" /></View>
               </View>
             </LinearGradient>
           </View>
