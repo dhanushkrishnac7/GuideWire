@@ -2,12 +2,13 @@ import React, { useState, useRef } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, Modal, TextInput, KeyboardAvoidingView,
-    Platform, FlatList, Animated
+    Platform, FlatList, Animated, ActivityIndicator
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
 import SwipeToAccept from '../components/SwipeToAccept';
+import { generateBotReply } from '../services/gemini';
 
 interface Props {
     onBack: () => void;
@@ -64,28 +65,7 @@ const PLAN_DETAILS_EXTRA: Record<string, Plan['details']> = {
     }
 };
 
-const BOT_REPLIES: Record<string, string> = {
-    default: "I'm your AI insurance assistant! You can ask me about coverage, payouts, exclusions, or which plan suits your gig work.",
-    coverage: "Coverage varies by plan. Mid Plan covers up to ₹2 Lakh, Pro Plan up to ₹5 Lakh, and Premium Plan up to ₹10 Lakh.",
-    payout: "Payouts are triggered automatically when weather or strike events are verified via our API partners. Premium plan offers instant payouts within 4 hours!",
-    exclusion: "Common exclusions include pre-existing conditions and fraudulent claims. The Premium plan has the fewest exclusions.",
-    deductible: "Pro and Premium plans have ZERO deductibles. Mid Plan has a ₹500 deductible per claim.",
-    recommend: "For most gig workers, we recommend the Pro Plan — it balances cost and comprehensive coverage with instant payouts.",
-    claim: "To file a claim, just open the Claims tab in the app. Our system auto-detects most eligible events, so you may not need to file manually!",
-    waiting: "Mid Plan has a 48hr waiting period. Pro has 24hrs. Premium has NO waiting period — coverage starts immediately!",
-};
 
-function getBotReply(text: string): string {
-    const lower = text.toLowerCase();
-    if (lower.includes('coverage') || lower.includes('cover')) return BOT_REPLIES.coverage;
-    if (lower.includes('payout') || lower.includes('pay')) return BOT_REPLIES.payout;
-    if (lower.includes('exclusion') || lower.includes('exclude') || lower.includes('not cover')) return BOT_REPLIES.exclusion;
-    if (lower.includes('deductible')) return BOT_REPLIES.deductible;
-    if (lower.includes('recommend') || lower.includes('best plan') || lower.includes('which plan')) return BOT_REPLIES.recommend;
-    if (lower.includes('claim') || lower.includes('file')) return BOT_REPLIES.claim;
-    if (lower.includes('wait') || lower.includes('period')) return BOT_REPLIES.waiting;
-    return BOT_REPLIES.default;
-}
 
 export default function PolicySelectionScreen({ onBack }: Props) {
     const [selectedPlan, setSelectedPlan] = useState<'Mid' | 'Pro' | 'Premium'>('Pro');
@@ -94,8 +74,9 @@ export default function PolicySelectionScreen({ onBack }: Props) {
     const [viewingPlan, setViewingPlan] = useState<Plan | null>(null);
     const [chatVisible, setChatVisible] = useState(false);
     const [chatInput, setChatInput] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: '0', text: "👋 Hi! I'm your AI policy assistant. Ask me anything about coverage, claims, or which plan suits you best!", sender: 'bot' }
+        { id: '0', text: "👋 Hi! I'm your AI policy assistant powered by Gemini. Ask me anything about coverage, claims, or which plan suits you best!", sender: 'bot' }
     ]);
     const chatScrollRef = useRef<FlatList>(null);
     const fabScale = useRef(new Animated.Value(1)).current;
@@ -136,14 +117,25 @@ export default function PolicySelectionScreen({ onBack }: Props) {
         setDetailsVisible(true);
     }
 
-    function sendMessage() {
+    async function sendMessage() {
         const trimmed = chatInput.trim();
-        if (!trimmed) return;
+        if (!trimmed || isTyping) return;
         const userMsg: ChatMessage = { id: Date.now().toString(), text: trimmed, sender: 'user' };
-        const botMsg: ChatMessage = { id: (Date.now() + 1).toString(), text: getBotReply(trimmed), sender: 'bot' };
-        setMessages(prev => [...prev, userMsg, botMsg]);
+        setMessages(prev => [...prev, userMsg]);
         setChatInput('');
+        setIsTyping(true);
         setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
+        try {
+            const reply = await generateBotReply(trimmed);
+            const botMsg: ChatMessage = { id: Date.now().toString(), text: reply, sender: 'bot' };
+            setMessages(prev => [...prev, botMsg]);
+        } catch {
+            const errMsg: ChatMessage = { id: Date.now().toString(), text: 'Sorry, something went wrong. Please try again.', sender: 'bot' };
+            setMessages(prev => [...prev, errMsg]);
+        } finally {
+            setIsTyping(false);
+            setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
+        }
     }
 
     function pulseFab() {
@@ -360,7 +352,23 @@ export default function PolicySelectionScreen({ onBack }: Props) {
                         {/* Suggestion Chips */}
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll} contentContainerStyle={styles.chipRow}>
                             {['Which plan is best?', 'How do payouts work?', 'What is the waiting period?', 'Any deductibles?'].map(chip => (
-                                <TouchableOpacity key={chip} style={styles.chip} onPress={() => { setChatInput(chip); }}>
+                                <TouchableOpacity key={chip} style={styles.chip} onPress={async () => {
+                                    if (isTyping) return;
+                                    const userMsg: ChatMessage = { id: Date.now().toString(), text: chip, sender: 'user' };
+                                    setMessages(prev => [...prev, userMsg]);
+                                    setIsTyping(true);
+                                    setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
+                                    try {
+                                        const reply = await generateBotReply(chip);
+                                        const botMsg: ChatMessage = { id: Date.now().toString(), text: reply, sender: 'bot' };
+                                        setMessages(prev => [...prev, botMsg]);
+                                    } catch {
+                                        setMessages(prev => [...prev, { id: Date.now().toString(), text: 'Sorry, something went wrong.', sender: 'bot' }]);
+                                    } finally {
+                                        setIsTyping(false);
+                                        setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
+                                    }
+                                }}>
                                     <Text style={styles.chipText}>{chip}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -383,6 +391,15 @@ export default function PolicySelectionScreen({ onBack }: Props) {
                             )}
                         />
 
+                        {/* Typing indicator */}
+                        {isTyping && (
+                            <View style={styles.typingIndicator}>
+                                <MaterialCommunityIcons name="robot-happy-outline" size={16} color="#6C63FF" style={{ marginRight: 6 }} />
+                                <ActivityIndicator size="small" color="#6C63FF" />
+                                <Text style={styles.typingText}>  AI is typing...</Text>
+                            </View>
+                        )}
+
                         {/* Input */}
                         <View style={styles.chatInputRow}>
                             <TextInput
@@ -394,7 +411,7 @@ export default function PolicySelectionScreen({ onBack }: Props) {
                                 returnKeyType="send"
                                 onSubmitEditing={sendMessage}
                             />
-                            <TouchableOpacity style={styles.sendBtn} onPress={sendMessage}>
+                            <TouchableOpacity style={[styles.sendBtn, isTyping && { opacity: 0.5 }]} onPress={sendMessage} disabled={isTyping}>
                                 <LinearGradient colors={['#6C63FF', '#3B82F6']} style={styles.sendBtnGrad}>
                                     <Ionicons name="send" size={18} color="#FFF" />
                                 </LinearGradient>
@@ -440,7 +457,7 @@ const styles = StyleSheet.create({
     radioSelected: { borderColor: theme.colors.primary },
     radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: theme.colors.primary },
     planPrice: { fontSize: 24, fontWeight: '800', marginBottom: 4 },
-    planCoverage: { ...theme.typography.subtitle, color: theme.colors.textMain, marginBottom: 16 },
+    planCoverage: { fontSize: 13, fontWeight: '500', color: theme.colors.textMain, marginBottom: 16 },
     benefitsList: { gap: 8, marginBottom: 14 },
     benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     benefitText: { ...theme.typography.body, color: theme.colors.textMain },
@@ -517,4 +534,6 @@ const styles = StyleSheet.create({
     chatInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: theme.colors.textMain },
     sendBtn: { width: 42, height: 42, borderRadius: 21, overflow: 'hidden' },
     sendBtnGrad: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    typingIndicator: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 12, marginBottom: 4 },
+    typingText: { fontSize: 13, color: '#6C63FF', fontStyle: 'italic', fontWeight: '500' },
 });
