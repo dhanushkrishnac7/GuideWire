@@ -13,6 +13,7 @@ export const theme = {
     scannerGradientEnd: '#1C0D99',
     folderGradientStart: '#EAE6FF',
     folderGradientEnd: '#F9F8FF',
+    borderLight: '#F0F1F5',
   },
   spacing: {
     xs: 4,

@@ -5,9 +5,50 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from './src/theme';
 import PolicySelectionScreen from './src/screens/PolicySelectionScreen';
+import SignInScreen from './src/screens/SignInScreen';
+import SignUpScreen from './src/screens/SignUpScreen';
+import LocationScreen from './src/screens/LocationScreen';
+import TermsScreen from './src/screens/TermsScreen';
+
+type Screen = 'SignIn' | 'SignUp' | 'Location' | 'Terms' | 'Home' | 'PolicySelection';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<'Home' | 'PolicySelection'>('Home');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('SignIn');
+
+  if (currentScreen === 'SignIn') {
+    return (
+      <SignInScreen
+        onSignIn={() => setCurrentScreen('Home')}
+        onGoToSignUp={() => setCurrentScreen('SignUp')}
+      />
+    );
+  }
+
+  if (currentScreen === 'SignUp') {
+    return (
+      <SignUpScreen
+        onSignUpSuccess={() => setCurrentScreen('Location')}
+        onGoToSignIn={() => setCurrentScreen('SignIn')}
+      />
+    );
+  }
+
+  if (currentScreen === 'Location') {
+    return (
+      <LocationScreen
+        onConfirmLocation={() => setCurrentScreen('Terms')}
+      />
+    );
+  }
+
+  if (currentScreen === 'Terms') {
+    return (
+      <TermsScreen
+        onAccept={() => setCurrentScreen('Home')}
+        onDecline={() => setCurrentScreen('SignIn')}
+      />
+    );
+  }
 
   if (currentScreen === 'PolicySelection') {
     return <PolicySelectionScreen onBack={() => setCurrentScreen('Home')} />;
