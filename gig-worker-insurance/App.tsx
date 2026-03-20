@@ -90,25 +90,11 @@ export default function App() {
           <Text style={styles.sparkleLeft}>✦</Text>
           <Text style={styles.sparkleRight}>✦</Text>
 
-          {/* Center Scan Area */}
-          <View style={styles.scanTargetArea}>
-            {/* The 4 corner borders */}
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-
-            <View style={styles.scanInner}>
-              <View style={styles.innerBox}>
-                <View style={styles.innerSquare} />
-              </View>
-              <View style={styles.innerBox}>
-                <View style={styles.innerSquare} />
-              </View>
-              <View style={styles.innerBox} />
-              <View style={styles.qrGridCorner} />
-            </View>
-            <Text style={styles.scanText}>Tap to view</Text>
+          {/* Center Shield Icon */}
+          <View style={styles.shieldWrap}>
+            <View style={styles.shieldGlow} />
+            <MaterialCommunityIcons name="shield-check" size={90} color="rgba(255,255,255,0.95)" />
+            <Text style={styles.shieldLabel}>You're Protected</Text>
           </View>
 
           {/* Flash message */}
@@ -268,20 +254,10 @@ const styles = StyleSheet.create({
   sparkleLeft: { position: 'absolute', top: 30, left: 40, color: 'rgba(255,255,255,0.4)', fontSize: 24 },
   sparkleRight: { position: 'absolute', top: 50, right: 30, color: 'rgba(255,255,255,0.7)', fontSize: 16 },
 
-  // Scan Target Area
-  scanTargetArea: { width: 180, height: 180, marginTop: theme.spacing.xl, alignItems: 'center', justifyContent: 'center' },
-  corner: { position: 'absolute', width: 24, height: 24, borderColor: '#AEE9D1', borderWidth: 3 },
-  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 12 },
-  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 12 },
-  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 12 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 12 },
-  scanText: { color: '#AEE9D1', marginTop: 24, ...theme.typography.subtitle },
-
-  // Faux QR Grid inside scan
-  scanInner: { flexDirection: 'row', flexWrap: 'wrap', width: 80, height: 80, justifyContent: 'space-between', alignContent: 'space-between' },
-  innerBox: { width: 36, height: 36, borderWidth: 3, borderColor: '#301B8D', borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
-  innerSquare: { width: 16, height: 16, backgroundColor: '#301B8D', borderRadius: 2 },
-  qrGridCorner: { width: 36, height: 36, backgroundColor: '#301B8D', borderRadius: 4, opacity: 0.5 },
+  // Center shield
+  shieldWrap: { alignItems: 'center', justifyContent: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.l },
+  shieldGlow: { position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.08)' },
+  shieldLabel: { color: '#AEE9D1', marginTop: 12, ...theme.typography.subtitle, fontSize: 14 },
 
   // Flash Message
   flashRow: { flexDirection: 'row', alignItems: 'center', marginTop: 32, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
