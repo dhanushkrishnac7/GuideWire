@@ -5,8 +5,7 @@ import {
   ScrollView, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../theme';
+import { theme, Icon } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -74,9 +73,9 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
 
             <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
               <View style={styles.logoCircle}>
-                <Ionicons name="shield-checkmark" size={36} color="#FFF" />
+                <Text style={{ fontSize: 36 }}>🛡️</Text>
               </View>
-              <Text style={styles.appName}>GuideWire</Text>
+              <Text style={styles.appName}>GigShield</Text>
               <Text style={styles.appTagline}>Gig Worker Insurance</Text>
             </Animated.View>
           </LinearGradient>
@@ -96,12 +95,10 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
                 errors.email && styles.inputError,
                 focusedField === 'email' && styles.inputFocused,
               ]}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={focusedField === 'email' ? theme.colors.primary : theme.colors.textMuted}
-                  style={styles.inputIcon}
-                />
+                <Text style={[
+                  styles.inputIcon,
+                  { color: focusedField === 'email' ? theme.colors.primary : theme.colors.textMuted }
+                ]}>{Icon.mail}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email or phone"
@@ -125,12 +122,10 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
                 errors.password && styles.inputError,
                 focusedField === 'password' && styles.inputFocused,
               ]}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color={focusedField === 'password' ? theme.colors.primary : theme.colors.textMuted}
-                  style={styles.inputIcon}
-                />
+                <Text style={[
+                  styles.inputIcon,
+                  { color: focusedField === 'password' ? theme.colors.primary : theme.colors.textMuted }
+                ]}>{Icon.lock}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
@@ -142,7 +137,10 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={focusedField === 'password' ? theme.colors.primary : theme.colors.textMuted} />
+                  <Text style={[
+                    styles.eyeIcon,
+                    { color: focusedField === 'password' ? theme.colors.primary : theme.colors.textMuted }
+                  ]}>{showPassword ? Icon.eyeOff : Icon.eye}</Text>
                 </TouchableOpacity>
               </View>
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
@@ -161,7 +159,7 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
                 style={styles.signInBtn}
               >
                 <Text style={styles.signInBtnText}>Sign In</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFF" />
+                <Text style={styles.signInBtnArrow}>{Icon.arrowRight}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -175,13 +173,13 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
             {/* Social Buttons */}
             <View style={styles.socialRow}>
               <TouchableOpacity style={styles.socialBtn}>
-                <Ionicons name="logo-google" size={22} color="#DB4437" />
+                <Text style={styles.socialIcon}>G</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.socialBtn}>
-                <Ionicons name="logo-apple" size={22} color="#000" />
+                <Text style={styles.socialIcon}>🍎</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.socialBtn}>
-                <Ionicons name="logo-facebook" size={22} color="#1877F2" />
+                <Text style={styles.socialIcon}>f</Text>
               </TouchableOpacity>
             </View>
 
@@ -244,12 +242,13 @@ const styles = StyleSheet.create({
   },
   inputFocused: { borderColor: theme.colors.primary, borderWidth: 2.5, backgroundColor: '#FFFFFF' },
   inputError: { borderColor: '#FF3B5C', borderWidth: 2 },
-  inputIcon: { marginRight: 12 },
+  inputIcon: { marginRight: 12, fontSize: 20 },
   input: {
     flex: 1, fontSize: 16, color: theme.colors.textMain, fontWeight: '500',
     paddingVertical: 4, outlineStyle: 'none',
   } as any,
   eyeBtn: { padding: 6 },
+  eyeIcon: { fontSize: 20 },
   errorText: { color: '#FF3B5C', fontSize: 12, fontWeight: '600', marginTop: 6, marginLeft: 4 },
 
   forgotRow: { alignSelf: 'flex-end', marginBottom: 24 },
@@ -261,6 +260,7 @@ const styles = StyleSheet.create({
     height: 54, borderRadius: 16,
   },
   signInBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700', marginRight: 8 },
+  signInBtnArrow: { color: '#FFF', fontSize: 18 },
 
   // Divider
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
@@ -274,6 +274,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F6FA', borderWidth: 1, borderColor: '#ECEDF2',
     justifyContent: 'center', alignItems: 'center',
   },
+  socialIcon: { fontSize: 22, fontWeight: '700' },
 
   // Sign Up
   signUpRow: { flexDirection: 'row', justifyContent: 'center', paddingBottom: 8 },

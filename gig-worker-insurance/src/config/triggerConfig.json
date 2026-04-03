@@ -1,0 +1,34 @@
+{
+  "triggers": {
+    "rain": {
+      "threshold": 10,
+      "unit": "mm/hr",
+      "minThreshold": 5,
+      "maxThreshold": 20,
+      "payout": 350,
+      "enabled": true
+    },
+    "heat": {
+      "threshold": 40,
+      "unit": "°C",
+      "minThreshold": 38,
+      "maxThreshold": 45,
+      "payout": 200,
+      "enabled": true
+    },
+    "traffic": {
+      "threshold": 15,
+      "unit": "km/h",
+      "minThreshold": 10,
+      "maxThreshold": 20,
+      "payout": 120,
+      "enabled": true
+    }
+  },
+  "engine": {
+    "pollingIntervalSeconds": 60,
+    "cooldownPeriodSeconds": 7200,
+    "maxRetries": 3,
+    "retryBackoffMs": 1000
+  }
+}

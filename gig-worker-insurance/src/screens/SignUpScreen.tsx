@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity,
+  StyleSheet, Text, View,
   SafeAreaView, KeyboardAvoidingView, Platform, Animated,
-  ScrollView,
+  ScrollView, TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../theme';
+import { theme, Icon } from '../theme';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 
 interface Props {
   onSignUpSuccess: () => void;
@@ -22,22 +23,19 @@ interface FormErrors {
 }
 
 export default function SignUpScreen({ onSignUpSuccess, onGoToSignIn }: Props) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [fullName, setFullName] = useState('Rahul Sharma');
+  const [email, setEmail] = useState('rahul.sharma@example.com');
+  const [phone, setPhone] = useState('+91 98765 43210');
+  const [password, setPassword] = useState('demo1234');
+  const [confirmPassword, setConfirmPassword] = useState('demo1234');
   const [errors, setErrors] = useState<FormErrors>({});
-  const [focusedField, setFocusedField] = useState<keyof FormErrors | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: theme.animation.fadeIn, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
     ]).start();
   }, []);
@@ -67,60 +65,6 @@ export default function SignUpScreen({ onSignUpSuccess, onGoToSignIn }: Props) {
     }
   };
 
-  const renderField = (
-    label: string,
-    icon: string,
-    value: string,
-    onChangeText: (t: string) => void,
-    errorKey: keyof FormErrors,
-    opts: {
-      placeholder: string;
-      keyboardType?: any;
-      autoCapitalize?: any;
-      isPassword?: boolean;
-      showPw?: boolean;
-      togglePw?: () => void;
-    },
-  ) => (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={[
-        styles.inputWrapper,
-        errors[errorKey] && styles.inputError,
-        focusedField === errorKey && styles.inputFocused,
-      ]}>
-        <Ionicons
-          name={icon as any}
-          size={19}
-          color={focusedField === errorKey ? theme.colors.primary : theme.colors.textMuted}
-          style={styles.inputIcon}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={opts.placeholder}
-          placeholderTextColor="#A0A5B1"
-          value={value}
-          onChangeText={(t) => { onChangeText(t); clearError(errorKey); }}
-          onFocus={() => setFocusedField(errorKey)}
-          onBlur={() => setFocusedField(null)}
-          keyboardType={opts.keyboardType || 'default'}
-          autoCapitalize={opts.autoCapitalize || 'none'}
-          secureTextEntry={opts.isPassword && !opts.showPw}
-        />
-        {opts.isPassword && (
-          <TouchableOpacity onPress={opts.togglePw} style={styles.eyeBtn}>
-            <Ionicons
-              name={opts.showPw ? 'eye-off-outline' : 'eye-outline'}
-              size={19}
-              color={focusedField === errorKey ? theme.colors.primary : theme.colors.textMuted}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-      {errors[errorKey] && <Text style={styles.errorText}>{errors[errorKey]}</Text>}
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -128,7 +72,7 @@ export default function SignUpScreen({ onSignUpSuccess, onGoToSignIn }: Props) {
 
           {/* Gradient Header */}
           <LinearGradient
-            colors={['#3A1CD9', '#6B42FF', '#9B6DFF']}
+            colors={[theme.colors.primary, theme.colors.primaryLight]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
           >
@@ -137,10 +81,10 @@ export default function SignUpScreen({ onSignUpSuccess, onGoToSignIn }: Props) {
 
             <View style={styles.headerInner}>
               <View style={styles.logoCircle}>
-                <Ionicons name="person-add" size={30} color="#FFF" />
+                <Text style={{ fontSize: 30 }}>👤</Text>
               </View>
               <Text style={styles.headerTitle}>Create Account</Text>
-              <Text style={styles.headerSub}>Join thousands of gig workers protected by GuideWire</Text>
+              <Text style={styles.headerSub}>Join thousands of gig workers protected by GigShield</Text>
             </View>
           </LinearGradient>
 
@@ -157,35 +101,66 @@ export default function SignUpScreen({ onSignUpSuccess, onGoToSignIn }: Props) {
               <Text style={styles.stepLabel}>Step 1 of 3</Text>
             </View>
 
-            {renderField('Full Name', 'person-outline', fullName, setFullName, 'fullName', {
-              placeholder: 'Enter your full name', autoCapitalize: 'words',
-            })}
-            {renderField('Email Address', 'mail-outline', email, setEmail, 'email', {
-              placeholder: 'you@example.com', keyboardType: 'email-address',
-            })}
-            {renderField('Phone Number', 'call-outline', phone, setPhone, 'phone', {
-              placeholder: '+91 XXXXX XXXXX', keyboardType: 'phone-pad',
-            })}
-            {renderField('Password', 'lock-closed-outline', password, setPassword, 'password', {
-              placeholder: 'Min. 6 characters', isPassword: true, showPw: showPassword,
-              togglePw: () => setShowPassword(!showPassword),
-            })}
-            {renderField('Confirm Password', 'lock-closed-outline', confirmPassword, setConfirmPassword, 'confirmPassword', {
-              placeholder: 'Re-enter password', isPassword: true, showPw: showConfirm,
-              togglePw: () => setShowConfirm(!showConfirm),
-            })}
+            <Input
+              label="Full Name"
+              icon={Icon.person}
+              value={fullName}
+              onChangeText={(t) => { setFullName(t); clearError('fullName'); }}
+              placeholder="Enter your full name"
+              autoCapitalize="words"
+              error={errors.fullName}
+            />
+
+            <Input
+              label="Email Address"
+              icon={Icon.mail}
+              value={email}
+              onChangeText={(t) => { setEmail(t); clearError('email'); }}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              error={errors.email}
+            />
+
+            <Input
+              label="Phone Number"
+              icon={Icon.phone}
+              value={phone}
+              onChangeText={(t) => { setPhone(t); clearError('phone'); }}
+              placeholder="+91 XXXXX XXXXX"
+              keyboardType="phone-pad"
+              error={errors.phone}
+            />
+
+            <Input
+              label="Password"
+              icon={Icon.lock}
+              value={password}
+              onChangeText={(t) => { setPassword(t); clearError('password'); }}
+              placeholder="Min. 6 characters"
+              secureTextEntry
+              error={errors.password}
+            />
+
+            <Input
+              label="Confirm Password"
+              icon={Icon.lock}
+              value={confirmPassword}
+              onChangeText={(t) => { setConfirmPassword(t); clearError('confirmPassword'); }}
+              placeholder="Re-enter password"
+              secureTextEntry
+              error={errors.confirmPassword}
+            />
 
             {/* Create Account Button */}
-            <TouchableOpacity onPress={handleSignUp} activeOpacity={0.85} style={{ marginTop: 8 }}>
-              <LinearGradient
-                colors={['#4B28E5', '#6B42FF']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={styles.createBtn}
-              >
-                <Text style={styles.createBtnText}>Create Account</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFF" />
-              </LinearGradient>
-            </TouchableOpacity>
+            <View style={{ marginTop: theme.spacing.s }}>
+              <Button
+                title="Create Account"
+                onPress={handleSignUp}
+                variant="primary"
+                size="large"
+                icon={Icon.arrowRight}
+              />
+            </View>
 
             {/* Sign In Link */}
             <View style={styles.signInRow}>
@@ -225,45 +200,19 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.7)', marginTop: 6, textAlign: 'center', paddingHorizontal: 40 },
 
   formCard: {
-    marginTop: -20, marginHorizontal: 18, backgroundColor: '#FFF',
-    borderRadius: 24, padding: 24,
-    shadowColor: '#4B28E5', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06, shadowRadius: 20, elevation: 6,
+    marginTop: -20, marginHorizontal: 18, backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl, padding: theme.spacing.l,
+    ...theme.shadows.card,
   },
 
   // Step indicator
-  stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, paddingHorizontal: 4 },
-  stepDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E0E2EA' },
+  stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.l, paddingHorizontal: 4 },
+  stepDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.colors.border },
   stepActive: { backgroundColor: theme.colors.primary, width: 12, height: 12, borderRadius: 6 },
-  stepLine: { flex: 1, height: 2, backgroundColor: '#E0E2EA', marginHorizontal: 4, maxWidth: 40 },
+  stepLine: { flex: 1, height: 2, backgroundColor: theme.colors.border, marginHorizontal: 4, maxWidth: 40 },
   stepLabel: { marginLeft: 'auto', fontSize: 12, fontWeight: '600', color: theme.colors.textMuted },
 
-  // Inputs
-  inputGroup: { marginBottom: 18 },
-  inputLabel: { fontSize: 14, fontWeight: '700', color: theme.colors.textMain, marginBottom: 9, letterSpacing: 0.2 },
-  inputWrapper: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FFFFFF', borderRadius: 14,
-    borderWidth: 2, borderColor: '#D4D6E0',
-    paddingHorizontal: 16, height: 56,
-  },
-  inputFocused: { borderColor: theme.colors.primary, borderWidth: 2.5, backgroundColor: '#FFFFFF' },
-  inputError: { borderColor: '#FF3B5C', borderWidth: 2 },
-  inputIcon: { marginRight: 12 },
-  input: {
-    flex: 1, fontSize: 16, color: theme.colors.textMain, fontWeight: '500',
-    paddingVertical: 4, outlineStyle: 'none',
-  } as any,
-  eyeBtn: { padding: 6 },
-  errorText: { color: '#FF3B5C', fontSize: 12, fontWeight: '600', marginTop: 5, marginLeft: 4 },
-
-  createBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    height: 54, borderRadius: 16,
-  },
-  createBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700', marginRight: 8 },
-
-  signInRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 20, paddingBottom: 4 },
+  signInRow: { flexDirection: 'row', justifyContent: 'center', marginTop: theme.spacing.l, paddingBottom: 4 },
   signInText: { fontSize: 14, color: theme.colors.textMuted, fontWeight: '500' },
   signInLink: { fontSize: 14, color: theme.colors.primary, fontWeight: '700' },
 });

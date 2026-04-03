@@ -1,539 +1,264 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
-    TouchableOpacity, Modal, TextInput, KeyboardAvoidingView,
-    Platform, FlatList, Animated, ActivityIndicator
+    TouchableOpacity, Animated, Easing
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
-import SwipeToAccept from '../components/SwipeToAccept';
-import { generateBotReply } from '../services/gemini';
 
 interface Props {
     onBack: () => void;
+    zone: string;
+    fleet: string;
+    onPlanSelected: (plan: string) => void;
 }
 
-interface Plan {
-    id: string;
-    title: string;
-    price: string;
-    coverage: string;
-    benefits: string[];
-    colors: [string, string];
-    recommended?: boolean;
-    details: {
-        deductible: string;
-        waitingPeriod: string;
-        payoutTime: string;
-        coveredEvents: string[];
-        exclusions: string[];
-        maxClaimsPerYear: number;
-    };
-}
-
-interface ChatMessage {
-    id: string;
-    text: string;
-    sender: 'user' | 'bot';
-}
-
-const PLAN_DETAILS_EXTRA: Record<string, Plan['details']> = {
-    Mid: {
-        deductible: '₹500 per claim',
-        waitingPeriod: '48 hours',
-        payoutTime: 'Within 3 business days',
-        coveredEvents: ['Rainfall > 20mm in 24hrs', 'Heatwave > 42°C for 2+ days', 'Basic hospitalization'],
-        exclusions: ['Pre-existing conditions', 'Self-inflicted damage', 'Vehicle accidents'],
-        maxClaimsPerYear: 3,
-    },
-    Pro: {
-        deductible: 'Nil',
-        waitingPeriod: '24 hours',
-        payoutTime: 'Within 1 business day',
-        coveredEvents: ['All Mid Plan events', 'Cyclone & flood alerts', 'Declared strikes & civil unrest', 'Instant digital payouts'],
-        exclusions: ['Fraudulent claims', 'War & nuclear risk'],
-        maxClaimsPerYear: 6,
-    },
-    Premium: {
-        deductible: 'Nil',
-        waitingPeriod: 'None',
-        payoutTime: 'Instant (within 4 hrs)',
-        coveredEvents: ['All Pro Plan events', 'Family health hospitalization', 'OPD coverage up to ₹10k', 'Zero waiting period'],
-        exclusions: ['Fraudulent claims'],
-        maxClaimsPerYear: 12,
-    }
-};
-
-
-
-export default function PolicySelectionScreen({ onBack }: Props) {
-    const [selectedPlan, setSelectedPlan] = useState<'Mid' | 'Pro' | 'Premium'>('Pro');
-    const [termsAccepted, setTermsAccepted] = useState(false);
-    const [detailsVisible, setDetailsVisible] = useState(false);
-    const [viewingPlan, setViewingPlan] = useState<Plan | null>(null);
-    const [chatVisible, setChatVisible] = useState(false);
-    const [chatInput, setChatInput] = useState('');
-    const [isTyping, setIsTyping] = useState(false);
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: '0', text: "👋 Hi! I'm your AI policy assistant powered by Gemini. Ask me anything about coverage, claims, or which plan suits you best!", sender: 'bot' }
-    ]);
-    const chatScrollRef = useRef<FlatList>(null);
-    const fabScale = useRef(new Animated.Value(1)).current;
-
-    const plans: Plan[] = [
-        {
-            id: 'Mid',
-            title: 'Mid Plan',
-            price: '₹299/mo',
-            coverage: 'Up to ₹2 Lakh',
-            benefits: ['Rain & Heat coverage', 'Basic Health Support'],
-            colors: ['#E6F4FF', '#FFF'],
-            details: PLAN_DETAILS_EXTRA.Mid,
-        },
-        {
-            id: 'Pro',
-            title: 'Pro Plan',
-            price: '₹599/mo',
-            coverage: 'Up to ₹5 Lakh',
-            benefits: ['All Mid Plan features', 'Strike & Riot coverage', 'Instant Payouts'],
-            colors: ['#EAE6FF', '#FFF'],
-            recommended: true,
-            details: PLAN_DETAILS_EXTRA.Pro,
-        },
-        {
-            id: 'Premium',
-            title: 'Premium Plan',
-            price: '₹999/mo',
-            coverage: 'Up to ₹10 Lakh',
-            benefits: ['All Pro Plan features', 'Family Health Cover', 'Zero Deductibles'],
-            colors: ['#FFF1E6', '#FFF'],
-            details: PLAN_DETAILS_EXTRA.Premium,
-        }
-    ];
-
-    function openDetails(plan: Plan) {
-        setViewingPlan(plan);
-        setDetailsVisible(true);
-    }
-
-    async function sendMessage() {
-        const trimmed = chatInput.trim();
-        if (!trimmed || isTyping) return;
-        const userMsg: ChatMessage = { id: Date.now().toString(), text: trimmed, sender: 'user' };
-        setMessages(prev => [...prev, userMsg]);
-        setChatInput('');
-        setIsTyping(true);
-        setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
-        try {
-            const reply = await generateBotReply(trimmed);
-            const botMsg: ChatMessage = { id: Date.now().toString(), text: reply, sender: 'bot' };
-            setMessages(prev => [...prev, botMsg]);
-        } catch {
-            const errMsg: ChatMessage = { id: Date.now().toString(), text: 'Sorry, something went wrong. Please try again.', sender: 'bot' };
-            setMessages(prev => [...prev, errMsg]);
-        } finally {
-            setIsTyping(false);
-            setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
-        }
-    }
-
-    function pulseFab() {
-        Animated.sequence([
-            Animated.spring(fabScale, { toValue: 0.88, useNativeDriver: true }),
-            Animated.spring(fabScale, { toValue: 1, useNativeDriver: true }),
-        ]).start();
-    }
-
-    const planAccentColor: Record<string, string> = {
-        Mid: '#4DACFF',
-        Pro: theme.colors.primary,
-        Premium: '#FF7A45',
-    };
+export default function PolicySelectionScreen({ onBack, zone, onPlanSelected }: Props) {
+    const [selectedPlan, setSelectedPlan] = useState('Kinetic');
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={onBack} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.textMain} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Select Policy</Text>
-                <View style={{ width: 40 }} />
+        <SafeAreaView style={styles.container}>
+            {/* Top bar matching Figma Screen 1 */}
+            <View style={styles.topBar}>
+                <View style={styles.topLeft}>
+                    <TouchableOpacity onPress={onBack}>
+                        <View style={styles.avatarCircle}>
+                            <Ionicons name="person" size={20} color="#FFF" />
+                        </View>
+                    </TouchableOpacity>
+                    <View style={styles.locationWrap}>
+                        <Text style={styles.locationCity}>BENGALURU{'\n'}SOUTH</Text>
+                    </View>
+                </View>
+                <View style={styles.protectedPill}>
+                    <View style={styles.activeDot} />
+                    <Text style={styles.protectedText}>COVERAGE ACTIVE</Text>
+                </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.sectionTitle}>Choose your protection</Text>
-                <Text style={styles.sectionSub}>Select a tier that fits your gig lifestyle.</Text>
+            <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-                <View style={styles.plansContainer}>
-                    {plans.map(plan => (
-                        <TouchableOpacity
-                            key={plan.id}
-                            activeOpacity={0.9}
-                            onPress={() => setSelectedPlan(plan.id as any)}
-                        >
-                            <LinearGradient
-                                colors={plan.colors as [string, string]}
-                                style={[styles.planCard, selectedPlan === plan.id && styles.planCardSelected]}
-                            >
-                                {plan.recommended && (
-                                    <View style={styles.recommendedBadge}>
-                                        <Text style={styles.recommendedText}>RECOMMENDED</Text>
-                                    </View>
-                                )}
-                                <View style={styles.planHeader}>
-                                    <Text style={styles.planTitle}>{plan.title}</Text>
-                                    <View style={[styles.radio, selectedPlan === plan.id && styles.radioSelected]}>
-                                        {selectedPlan === plan.id && <View style={styles.radioInner} />}
-                                    </View>
-                                </View>
-                                <Text style={[styles.planPrice, { color: planAccentColor[plan.id] }]}>{plan.price}</Text>
-                                <Text style={styles.planCoverage}>Coverage: {plan.coverage}</Text>
-
-                                <View style={styles.benefitsList}>
-                                    {plan.benefits.map((benefit, idx) => (
-                                        <View key={idx} style={styles.benefitRow}>
-                                            <Ionicons name="checkmark-circle" size={16} color={planAccentColor[plan.id]} />
-                                            <Text style={styles.benefitText}>{benefit}</Text>
-                                        </View>
-                                    ))}
-                                </View>
-
-                                {/* View Full Details Button */}
-                                <TouchableOpacity
-                                    style={[styles.detailsBtn, { borderColor: planAccentColor[plan.id] }]}
-                                    onPress={(e) => { e.stopPropagation?.(); openDetails(plan); }}
-                                    activeOpacity={0.7}
-                                >
-                                    <Ionicons name="document-text-outline" size={14} color={planAccentColor[plan.id]} />
-                                    <Text style={[styles.detailsBtnText, { color: planAccentColor[plan.id] }]}>View Full Details</Text>
-                                    <Ionicons name="chevron-forward" size={14} color={planAccentColor[plan.id]} />
-                                </TouchableOpacity>
-                            </LinearGradient>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                <View style={styles.termsContainer}>
-                    <Text style={styles.termsTitle}>Terms & Conditions</Text>
-                    <Text style={styles.termsText}>
-                        By accepting, you agree to the gig-worker-insurance policy terms. Coverage begins 24 hours after plan activation. Payouts are subject to verification of weather or strike events via our API partners. Active app activity required for payouts.
-                    </Text>
-                </View>
-
-                <View style={styles.actionContainer}>
-                    <SwipeToAccept onAccept={() => setTermsAccepted(true)} />
-                    <TouchableOpacity
-                        style={[styles.confirmBtn, !termsAccepted && styles.confirmBtnDisabled]}
-                        disabled={!termsAccepted}
-                        onPress={() => {
-                            if (termsAccepted) {
-                                alert(`Successfully enrolled in ${selectedPlan} Plan!`);
-                                onBack();
-                            }
-                        }}
-                    >
-                        <Text style={styles.confirmBtnText}>Confirm Selection</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
-
-            {/* AI Chat Bot FAB */}
-            <Animated.View style={[styles.fabContainer, { transform: [{ scale: fabScale }] }]}>
-                <TouchableOpacity
-                    style={styles.fab}
-                    onPress={() => { pulseFab(); setChatVisible(true); }}
-                    activeOpacity={0.85}
-                >
-                    <LinearGradient colors={['#6C63FF', '#3B82F6']} style={styles.fabGradient}>
-                        <Ionicons name="chatbubble-ellipses" size={22} color="#FFF" />
-                    </LinearGradient>
-                    <View style={styles.fabBadge}>
-                        <Text style={styles.fabBadgeText}>AI</Text>
-                    </View>
-                </TouchableOpacity>
-                <Text style={styles.fabLabel}>Help</Text>
-            </Animated.View>
-
-            {/* ── Policy Details Modal ── */}
-            <Modal
-                visible={detailsVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setDetailsVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.detailsModal}>
-                        {viewingPlan && (
-                            <>
-                                <LinearGradient
-                                    colors={viewingPlan.colors}
-                                    style={styles.detailsModalHeader}
-                                >
-                                    <View>
-                                        <Text style={styles.detailsModalTitle}>{viewingPlan.title}</Text>
-                                        <Text style={[styles.detailsModalPrice, { color: planAccentColor[viewingPlan.id] }]}>{viewingPlan.price}</Text>
-                                        <Text style={styles.detailsModalCoverage}>Coverage: {viewingPlan.coverage}</Text>
-                                    </View>
-                                    <TouchableOpacity onPress={() => setDetailsVisible(false)} style={styles.modalCloseBtn}>
-                                        <Ionicons name="close-circle" size={28} color={planAccentColor[viewingPlan.id]} />
-                                    </TouchableOpacity>
-                                </LinearGradient>
-
-                                <ScrollView style={styles.detailsModalBody} showsVerticalScrollIndicator={false}>
-                                    <DetailRow icon="flash" label="Deductible" value={viewingPlan.details.deductible} color={planAccentColor[viewingPlan.id]} />
-                                    <DetailRow icon="time" label="Waiting Period" value={viewingPlan.details.waitingPeriod} color={planAccentColor[viewingPlan.id]} />
-                                    <DetailRow icon="wallet" label="Payout Time" value={viewingPlan.details.payoutTime} color={planAccentColor[viewingPlan.id]} />
-                                    <DetailRow icon="document-text" label="Max Claims / Year" value={`${viewingPlan.details.maxClaimsPerYear} claims`} color={planAccentColor[viewingPlan.id]} />
-
-                                    <Text style={styles.detailSection}>✅ Covered Events</Text>
-                                    {viewingPlan.details.coveredEvents.map((ev, i) => (
-                                        <View key={i} style={styles.bulletRow}>
-                                            <Ionicons name="checkmark-circle" size={16} color={planAccentColor[viewingPlan.id]} />
-                                            <Text style={styles.bulletText}>{ev}</Text>
-                                        </View>
-                                    ))}
-
-                                    <Text style={styles.detailSection}>🚫 Exclusions</Text>
-                                    {viewingPlan.details.exclusions.map((ex, i) => (
-                                        <View key={i} style={styles.bulletRow}>
-                                            <Ionicons name="close-circle" size={16} color="#FF3B30" />
-                                            <Text style={styles.bulletText}>{ex}</Text>
-                                        </View>
-                                    ))}
-
-                                    <TouchableOpacity
-                                        style={[styles.selectFromDetailBtn, { backgroundColor: planAccentColor[viewingPlan.id] }]}
-                                        onPress={() => { setSelectedPlan(viewingPlan.id as any); setDetailsVisible(false); }}
-                                    >
-                                        <Text style={styles.selectFromDetailBtnText}>Select This Plan</Text>
-                                        <Ionicons name="checkmark" size={18} color="#FFF" />
-                                    </TouchableOpacity>
-
-                                    <View style={{ height: 24 }} />
-                                </ScrollView>
-                            </>
-                        )}
-                    </View>
-                </View>
-            </Modal>
-
-            {/* ── AI Chat Bot Modal ── */}
-            <Modal
-                visible={chatVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setChatVisible(false)}
-            >
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.modalOverlay}
-                >
-                    <View style={styles.chatModal}>
-                        {/* Header */}
-                        <LinearGradient colors={['#6C63FF', '#3B82F6']} style={styles.chatHeader}>
-                            <View style={styles.chatHeaderLeft}>
-                                <View style={styles.botAvatar}>
-                                    <MaterialCommunityIcons name="robot-happy" size={22} color="#FFF" />
-                                </View>
-                                <View>
-                                    <Text style={styles.chatHeaderTitle}>AI Policy Assistant</Text>
-                                    <View style={styles.onlineRow}>
-                                        <View style={styles.onlineDot} />
-                                        <Text style={styles.onlineText}>Always here to help</Text>
-                                    </View>
-                                </View>
-                            </View>
-                            <TouchableOpacity onPress={() => setChatVisible(false)}>
-                                <Ionicons name="close-circle" size={28} color="rgba(255,255,255,0.8)" />
-                            </TouchableOpacity>
-                        </LinearGradient>
-
-                        {/* Suggestion Chips */}
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll} contentContainerStyle={styles.chipRow}>
-                            {['Which plan is best?', 'How do payouts work?', 'What is the waiting period?', 'Any deductibles?'].map(chip => (
-                                <TouchableOpacity key={chip} style={styles.chip} onPress={async () => {
-                                    if (isTyping) return;
-                                    const userMsg: ChatMessage = { id: Date.now().toString(), text: chip, sender: 'user' };
-                                    setMessages(prev => [...prev, userMsg]);
-                                    setIsTyping(true);
-                                    setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
-                                    try {
-                                        const reply = await generateBotReply(chip);
-                                        const botMsg: ChatMessage = { id: Date.now().toString(), text: reply, sender: 'bot' };
-                                        setMessages(prev => [...prev, botMsg]);
-                                    } catch {
-                                        setMessages(prev => [...prev, { id: Date.now().toString(), text: 'Sorry, something went wrong.', sender: 'bot' }]);
-                                    } finally {
-                                        setIsTyping(false);
-                                        setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 100);
-                                    }
-                                }}>
-                                    <Text style={styles.chipText}>{chip}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-
-                        {/* Messages */}
-                        <FlatList
-                            ref={chatScrollRef}
-                            data={messages}
-                            keyExtractor={m => m.id}
-                            style={styles.messageList}
-                            contentContainerStyle={{ padding: 12, gap: 8 }}
-                            renderItem={({ item }) => (
-                                <View style={[styles.messageBubble, item.sender === 'user' ? styles.userBubble : styles.botBubble]}>
-                                    {item.sender === 'bot' && (
-                                        <MaterialCommunityIcons name="robot-happy-outline" size={16} color="#6C63FF" style={{ marginRight: 6, marginTop: 2 }} />
-                                    )}
-                                    <Text style={[styles.messageText, item.sender === 'user' && { color: '#FFF' }]}>{item.text}</Text>
-                                </View>
-                            )}
-                        />
-
-                        {/* Typing indicator */}
-                        {isTyping && (
-                            <View style={styles.typingIndicator}>
-                                <MaterialCommunityIcons name="robot-happy-outline" size={16} color="#6C63FF" style={{ marginRight: 6 }} />
-                                <ActivityIndicator size="small" color="#6C63FF" />
-                                <Text style={styles.typingText}>  AI is typing...</Text>
-                            </View>
-                        )}
-
-                        {/* Input */}
-                        <View style={styles.chatInputRow}>
-                            <TextInput
-                                style={styles.chatInput}
-                                value={chatInput}
-                                onChangeText={setChatInput}
-                                placeholder="Ask about your policy..."
-                                placeholderTextColor="#9CA3AF"
-                                returnKeyType="send"
-                                onSubmitEditing={sendMessage}
-                            />
-                            <TouchableOpacity style={[styles.sendBtn, isTyping && { opacity: 0.5 }]} onPress={sendMessage} disabled={isTyping}>
-                                <LinearGradient colors={['#6C63FF', '#3B82F6']} style={styles.sendBtnGrad}>
-                                    <Ionicons name="send" size={18} color="#FFF" />
-                                </LinearGradient>
-                            </TouchableOpacity>
+                {/* AI Risk Intelligence */}
+                <View style={styles.riskSection}>
+                    <View style={styles.riskHeader}>
+                        <Text style={styles.riskIntelLabel}>AI RISK INTELLIGENCE</Text>
+                        <View style={styles.liveStatusPill}>
+                            <Text style={styles.liveStatusText}>LIVE STATUS</Text>
                         </View>
                     </View>
-                </KeyboardAvoidingView>
-            </Modal>
+                    <Text style={styles.highExposureTitle}>High Exposure Zone</Text>
+
+                    <View style={styles.riskCard}>
+                        <View style={styles.riskCardRow}>
+                            <View style={styles.riskCol}>
+                                <Ionicons name="rainy" size={20} color="#FF7A45" style={{ marginBottom: 4 }} />
+                                <Text style={styles.riskSubLabel}>FORECAST</Text>
+                                <Text style={styles.riskValue}>Monsoon Peak</Text>
+                            </View>
+                            <View style={styles.riskDivider} />
+                            <View style={styles.riskCol}>
+                                <Ionicons name="location" size={20} color="#FFCC00" style={{ marginBottom: 4 }} />
+                                <Text style={styles.riskSubLabel}>AREA</Text>
+                                <Text style={styles.riskValue}>Bengaluru South</Text>
+                            </View>
+                        </View>
+                        <View style={styles.riskBarContainer}>
+                            <View style={styles.riskBarBg}>
+                                <View style={[styles.riskBarFill, { width: '78%' }]} />
+                            </View>
+                            <Text style={styles.riskFactorText}>78% Risk Factor</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Protection Plans */}
+                <View style={styles.sectionHeaderBox}>
+                    <Text style={styles.sectionTitle}>Protection Plans</Text>
+                    <View style={styles.infoRow}>
+                        <Ionicons name="information-circle-outline" size={12} color={theme.colors.textMuted} />
+                        <Text style={styles.sectionSubtitle}>Premiums adjusted based on historical weather & strikes data</Text>
+                    </View>
+                </View>
+
+                {/* Kinetic Premium */}
+                <TouchableOpacity
+                    style={[styles.planCard, selectedPlan === 'Kinetic' && styles.planCardActive]}
+                    onPress={() => setSelectedPlan('Kinetic')}
+                    activeOpacity={0.8}
+                >
+                    <View style={styles.planHeader}>
+                        <View>
+                            <Text style={styles.planTitleWhite}>Kinetic Premium</Text>
+                            <Text style={styles.planDescWhite}>Full Resilience Shield</Text>
+                        </View>
+                        <View style={styles.recommendedBadge}>
+                            <Text style={styles.recommendedBadgeText}>RECOMMENDED</Text>
+                            <Text style={styles.planPriceWhite}>₹45<Text style={styles.planPricePeriod}>/wk</Text></Text>
+                        </View>
+                    </View>
+                    <View style={styles.planIconsRow}>
+                        <View style={styles.iconPill}><Ionicons name="rainy" size={10} color="#FFF" /><Text style={styles.iconPillText}>RAIN</Text></View>
+                        <View style={styles.iconPill}><Ionicons name="sunny" size={10} color="#FFF" /><Text style={styles.iconPillText}>HEAT</Text></View>
+                        <View style={styles.iconPill}><Ionicons name="flash" size={10} color="#FFF" /><Text style={styles.iconPillText}>STRIKES</Text></View>
+                        <View style={styles.iconPill}><Ionicons name="cloud" size={10} color="#FFF" /><Text style={styles.iconPillText}>POLLUTION</Text></View>
+                    </View>
+                </TouchableOpacity>
+
+                {/* Standard Safety */}
+                <TouchableOpacity
+                    style={[styles.planCardLight, selectedPlan === 'Standard' && styles.planCardLightActive]}
+                    onPress={() => setSelectedPlan('Standard')}
+                    activeOpacity={0.8}
+                >
+                    <View style={styles.planHeader}>
+                        <View>
+                            <Text style={styles.planTitleDark}>Standard Safety</Text>
+                            <Text style={styles.planDescDark}>Essential Rain Protection</Text>
+                        </View>
+                        <View style={styles.priceRowLight}>
+                            <Text style={styles.planPriceDark}>₹25<Text style={styles.planPricePeriodDark}>/wk</Text></Text>
+                            <View style={styles.arrowCircle}>
+                                <Ionicons name="arrow-forward" size={16} color={theme.colors.textMuted} />
+                            </View>
+                        </View>
+                    </View>
+                    <View style={styles.planIconsRow}>
+                        <View style={styles.iconPillDark}><Ionicons name="rainy" size={14} color={theme.colors.textMuted} /></View>
+                        <View style={styles.iconPillDark}><Ionicons name="cloud" size={14} color={theme.colors.textMuted} /></View>
+                    </View>
+                </TouchableOpacity>
+
+                {/* Coverage Analysis */}
+                <View style={styles.coverageAnalysisSection}>
+                    <Text style={styles.analysisTitle}>COVERAGE ANALYSIS</Text>
+                    <View style={styles.analysisColumns}>
+                        <View style={styles.analysisColLeft}>
+                            <View style={styles.analysisColHeader}>
+                                <Ionicons name="checkmark-circle" size={12} color="#E8472A" />
+                                <Text style={styles.incExcLabel}>INCLUDED</Text>
+                            </View>
+                            <Text style={styles.analysisItemText}>•  Heavy Rain Loss</Text>
+                            <Text style={styles.analysisItemText}>•  Heat Exhaustion</Text>
+                            <Text style={styles.analysisItemText}>•  Strike Downtime</Text>
+                        </View>
+                        <View style={styles.analysisColRight}>
+                            <View style={styles.analysisColHeader}>
+                                <Ionicons name="close-circle" size={12} color={theme.colors.textMuted} />
+                                <Text style={styles.incExcLabelGray}>EXCLUDED</Text>
+                            </View>
+                            <Text style={styles.analysisItemTextGray}>•  Vehicle Repair</Text>
+                            <Text style={styles.analysisItemTextGray}>•  Regular Health</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Button */}
+                <TouchableOpacity style={styles.activateBtn} onPress={() => onPlanSelected(selectedPlan)}>
+                    <Text style={styles.activateBtnText}>ACTIVATE WEEKLY PROTECTION <Ionicons name="flash" size={14} color="#FFF" /></Text>
+                </TouchableOpacity>
+                <Text style={styles.autoRenewText}>Auto-renews every Monday at 00:00. Cancel anytime.</Text>
+
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
-function DetailRow({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) {
-    return (
-        <View style={styles.detailRow}>
-            <View style={[styles.detailIcon, { backgroundColor: color + '20' }]}>
-                <Ionicons name={icon as any} size={16} color={color} />
-            </View>
-            <View style={{ flex: 1 }}>
-                <Text style={styles.detailLabel}>{label}</Text>
-                <Text style={styles.detailValue}>{value}</Text>
-            </View>
-        </View>
-    );
-}
-
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: theme.colors.background },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: theme.spacing.m, paddingVertical: theme.spacing.s },
-    backButton: { padding: theme.spacing.s, marginLeft: -theme.spacing.s },
-    headerTitle: { ...theme.typography.header, fontSize: 18 },
-    scrollContent: { padding: theme.spacing.m, paddingBottom: 120 },
-    sectionTitle: { ...theme.typography.header, marginBottom: 4 },
-    sectionSub: { ...theme.typography.body, color: theme.colors.textMuted, marginBottom: theme.spacing.l },
-    plansContainer: { gap: theme.spacing.m, marginBottom: theme.spacing.xl },
-    planCard: { padding: theme.spacing.l, borderRadius: theme.borderRadius.m, borderWidth: 2, borderColor: 'transparent' },
-    planCardSelected: { borderColor: theme.colors.primary },
-    recommendedBadge: { position: 'absolute', top: -12, alignSelf: 'center', backgroundColor: theme.colors.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-    recommendedText: { color: '#FFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
-    planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-    planTitle: { ...theme.typography.title, fontSize: 18 },
-    radio: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: theme.colors.textMuted, justifyContent: 'center', alignItems: 'center' },
-    radioSelected: { borderColor: theme.colors.primary },
-    radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: theme.colors.primary },
-    planPrice: { fontSize: 24, fontWeight: '800', marginBottom: 4 },
-    planCoverage: { fontSize: 13, fontWeight: '500', color: theme.colors.textMain, marginBottom: 16 },
-    benefitsList: { gap: 8, marginBottom: 14 },
-    benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    benefitText: { ...theme.typography.body, color: theme.colors.textMain },
+    container: { flex: 1, backgroundColor: '#FFF' },
+    topBar: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF'
+    },
+    topLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    avatarCircle: {
+        width: 44, height: 44, borderRadius: 22,
+        backgroundColor: theme.colors.primary, justifyContent: 'center', alignItems: 'center',
+    },
+    locationWrap: { justifyContent: 'center' },
+    locationCity: { fontSize: 13, fontWeight: '900', color: theme.colors.primary, lineHeight: 15 },
+    protectedPill: {
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: '#E8EEFE', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    },
+    activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FF7A45' },
+    protectedText: { fontSize: 10, fontWeight: '800', color: theme.colors.primary, letterSpacing: 0.5 },
 
-    // View Full Details button inside card
-    detailsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5, marginTop: 4 },
-    detailsBtnText: { fontSize: 13, fontWeight: '600' },
+    scroll: { paddingTop: 10, paddingBottom: 40, paddingHorizontal: 16 },
 
-    termsContainer: { padding: theme.spacing.m, backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: theme.borderRadius.s, marginBottom: theme.spacing.l },
-    termsTitle: { ...theme.typography.subtitle, marginBottom: 8 },
-    termsText: { ...theme.typography.body, color: theme.colors.textMuted, lineHeight: 18 },
-    actionContainer: { alignItems: 'center' },
-    confirmBtn: { width: '100%', backgroundColor: theme.colors.primary, paddingVertical: 16, borderRadius: theme.borderRadius.m, alignItems: 'center', marginTop: theme.spacing.m },
-    confirmBtnDisabled: { backgroundColor: theme.colors.textMuted },
-    confirmBtnText: { color: '#FFF', ...theme.typography.title, fontSize: 16 },
+    // Risk Intelligence
+    riskSection: { marginBottom: 32 },
+    riskHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+    riskIntelLabel: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5 },
+    liveStatusPill: { backgroundColor: '#FF7A45', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+    liveStatusText: { fontSize: 9, fontWeight: '800', color: '#FFF' },
+    highExposureTitle: { fontSize: 20, fontWeight: '900', color: theme.colors.primary, marginBottom: 16 },
 
-    // FAB
-    fabContainer: { position: 'absolute', bottom: 24, right: 20, alignItems: 'center' },
-    fab: { width: 58, height: 58, borderRadius: 29, elevation: 8, shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8 },
-    fabGradient: { width: 58, height: 58, borderRadius: 29, justifyContent: 'center', alignItems: 'center' },
-    fabBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#FF2E93', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8 },
-    fabBadgeText: { color: '#FFF', fontSize: 9, fontWeight: 'bold' },
-    fabLabel: { color: theme.colors.textMuted, fontSize: 11, marginTop: 4, fontWeight: '600' },
+    riskCard: {
+        backgroundColor: '#F7F7F9', borderRadius: 16, padding: 16,
+        borderWidth: 1, borderColor: theme.colors.border,
+    },
+    riskCardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+    riskCol: { flex: 1, alignItems: 'flex-start' },
+    riskDivider: { width: 1, height: 40, backgroundColor: theme.colors.border, marginHorizontal: 16 },
+    riskSubLabel: { fontSize: 9, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1 },
+    riskValue: { fontSize: 16, fontWeight: '800', color: theme.colors.primary, marginTop: 2 },
 
-    // Modal Overlay
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+    riskBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    riskBarBg: { flex: 1, height: 6, backgroundColor: '#E0E2EA', borderRadius: 3 },
+    riskBarFill: { height: '100%', backgroundColor: '#E8472A', borderRadius: 3 },
+    riskFactorText: { fontSize: 11, fontWeight: '800', color: '#E8472A' },
 
-    // Details Modal
-    detailsModal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '90%', overflow: 'hidden' },
-    detailsModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 20, paddingTop: 24 },
-    detailsModalTitle: { fontSize: 22, fontWeight: '800', color: theme.colors.textMain, marginBottom: 4 },
-    detailsModalPrice: { fontSize: 20, fontWeight: '800', marginBottom: 2 },
-    detailsModalCoverage: { ...theme.typography.body, color: theme.colors.textMuted },
-    modalCloseBtn: { padding: 4 },
-    detailsModalBody: { paddingHorizontal: 20, paddingTop: 8 },
+    // Protection Plans
+    sectionHeaderBox: { marginBottom: 16 },
+    sectionTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.primary, marginBottom: 4 },
+    infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    sectionSubtitle: { fontSize: 11, color: theme.colors.textSub },
 
-    detailRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-    detailIcon: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-    detailLabel: { fontSize: 11, color: theme.colors.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.3 },
-    detailValue: { fontSize: 15, fontWeight: '700', color: theme.colors.textMain, marginTop: 1 },
+    planCard: {
+        backgroundColor: theme.colors.primary, borderRadius: 16, padding: 20, marginBottom: 12,
+        borderWidth: 2, borderColor: theme.colors.primary,
+    },
+    planCardActive: { borderColor: '#FF7A45' },
+    planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+    planTitleWhite: { fontSize: 18, fontWeight: '800', color: '#FFF', marginBottom: 2 },
+    planDescWhite: { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
+    recommendedBadge: { backgroundColor: '#FF7A45', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, alignItems: 'center' },
+    recommendedBadgeText: { fontSize: 9, fontWeight: '800', color: '#FFF', letterSpacing: 0.5, marginBottom: 2 },
+    planPriceWhite: { fontSize: 20, fontWeight: '900', color: '#FFF' },
+    planPricePeriod: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
 
-    detailSection: { fontSize: 15, fontWeight: '700', color: theme.colors.textMain, marginTop: 12, marginBottom: 8 },
-    bulletRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
-    bulletText: { flex: 1, ...theme.typography.body, color: theme.colors.textMain, lineHeight: 20 },
+    planIconsRow: { flexDirection: 'row', gap: 8 },
+    iconPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+    iconPillText: { fontSize: 9, fontWeight: '800', color: '#FFF', letterSpacing: 0.5 },
 
-    selectFromDetailBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, marginTop: 20 },
-    selectFromDetailBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+    planCardLight: {
+        backgroundColor: '#FFF', borderRadius: 16, padding: 20, marginBottom: 24,
+        borderWidth: 2, borderColor: theme.colors.border,
+    },
+    planCardLightActive: { borderColor: theme.colors.primary },
+    planTitleDark: { fontSize: 16, fontWeight: '800', color: theme.colors.textMain, marginBottom: 2 },
+    planDescDark: { fontSize: 11, color: theme.colors.textMuted },
+    priceRowLight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    planPriceDark: { fontSize: 20, fontWeight: '900', color: theme.colors.textMain },
+    planPricePeriodDark: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted },
+    arrowCircle: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.border, justifyContent: 'center', alignItems: 'center' },
+    iconPillDark: { justifyContent: 'center', alignItems: 'center', marginRight: 12 },
 
-    // Chat Modal
-    chatModal: { backgroundColor: '#F8F9FF', borderTopLeftRadius: 24, borderTopRightRadius: 24, height: '80%', overflow: 'hidden' },
-    chatHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-    chatHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    botAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
-    chatHeaderTitle: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-    onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-    onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CD964' },
-    onlineText: { color: 'rgba(255,255,255,0.8)', fontSize: 11 },
+    // Coverage Analysis
+    coverageAnalysisSection: { marginBottom: 32 },
+    analysisTitle: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginBottom: 16 },
+    analysisColumns: { flexDirection: 'row' },
+    analysisColLeft: { flex: 1, borderRightWidth: 1, borderRightColor: theme.colors.border, paddingRight: 16 },
+    analysisColRight: { flex: 1, paddingLeft: 16 },
+    analysisColHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+    incExcLabel: { fontSize: 10, fontWeight: '800', color: '#E8472A', letterSpacing: 0.5 },
+    incExcLabelGray: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 0.5 },
+    analysisItemText: { fontSize: 12, fontWeight: '700', color: theme.colors.primary, marginBottom: 8 },
+    analysisItemTextGray: { fontSize: 12, fontWeight: '600', color: theme.colors.textMuted, marginBottom: 8 },
 
-    // Suggestion chips
-    chipScroll: { maxHeight: 44, flexGrow: 0 },
-    chipRow: { paddingHorizontal: 12, paddingVertical: 8, gap: 8 },
-    chip: { backgroundColor: '#EDE9FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#C4B5FD' },
-    chipText: { color: '#6C63FF', fontSize: 12, fontWeight: '600' },
+    // Button
+    activateBtn: { width: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary, paddingVertical: 18, borderRadius: 12, marginBottom: 12 },
+    activateBtnText: { fontSize: 13, fontWeight: '800', color: '#FFF', letterSpacing: 0.5 },
+    autoRenewText: { fontSize: 11, color: theme.colors.textMuted, textAlign: 'center' },
 
-    // Messages
-    messageList: { flex: 1 },
-    messageBubble: { flexDirection: 'row', padding: 12, borderRadius: 16, maxWidth: '85%' },
-    botBubble: { backgroundColor: '#FFF', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#E5E7EB' },
-    userBubble: { backgroundColor: '#6C63FF', alignSelf: 'flex-end', borderRadius: 16 },
-    messageText: { flex: 1, fontSize: 14, color: theme.colors.textMain, lineHeight: 20 },
-
-    // Input
-    chatInputRow: { flexDirection: 'row', padding: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', gap: 8, alignItems: 'center' },
-    chatInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: theme.colors.textMain },
-    sendBtn: { width: 42, height: 42, borderRadius: 21, overflow: 'hidden' },
-    sendBtnGrad: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    typingIndicator: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 12, marginBottom: 4 },
-    typingText: { fontSize: 13, color: '#6C63FF', fontStyle: 'italic', fontWeight: '500' },
 });

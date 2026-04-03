@@ -4,12 +4,12 @@ import {
   ScrollView, Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { theme } from '../theme';
+import { theme, Icon } from '../theme';
 
 interface Props {
   onAccept: () => void;
   onDecline: () => void;
+  onBack: () => void;
 }
 
 const TERMS_SECTIONS = [
@@ -51,7 +51,7 @@ const TERMS_SECTIONS = [
   },
 ];
 
-export default function TermsScreen({ onAccept, onDecline }: Props) {
+export default function TermsScreen({ onAccept, onDecline, onBack }: Props) {
   const [agreed, setAgreed] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const checkScale = useRef(new Animated.Value(0.5)).current;
@@ -73,12 +73,15 @@ export default function TermsScreen({ onAccept, onDecline }: Props) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#3A1CD9', '#6B42FF']}
+        colors={['#1A1B4B', '#2D2E7A']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <View style={[styles.decorCircle, { bottom: -10, left: -10, width: 70, height: 70 }]} />
         <View style={styles.headerContent}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+            <Text style={styles.backIcon}>{Icon.back}</Text>
+          </TouchableOpacity>
           <View style={styles.stepRow}>
             <View style={[styles.stepDot, styles.stepDone]} />
             <View style={[styles.stepLine, styles.stepLineDone]} />
@@ -101,7 +104,7 @@ export default function TermsScreen({ onAccept, onDecline }: Props) {
         >
           <View style={styles.termsCard}>
             <View style={styles.termsHeaderRow}>
-              <MaterialCommunityIcons name="file-document-outline" size={22} color={theme.colors.primary} />
+              <Text style={styles.termsHeaderIcon}>{Icon.document}</Text>
               <Text style={styles.termsMainTitle}>Terms of Service & Privacy Policy</Text>
             </View>
             <Text style={styles.termsDate}>Last updated: March 2026</Text>
@@ -114,7 +117,7 @@ export default function TermsScreen({ onAccept, onDecline }: Props) {
             ))}
 
             <View style={styles.contactBox}>
-              <Ionicons name="mail-outline" size={18} color={theme.colors.primary} />
+              <Text style={styles.contactIcon}>{Icon.mail}</Text>
               <Text style={styles.contactText}>
                 Questions? Contact us at support@guidewire-gig.com
               </Text>
@@ -132,7 +135,7 @@ export default function TermsScreen({ onAccept, onDecline }: Props) {
             agreed ? styles.checkboxChecked : styles.checkboxUnchecked,
             { transform: [{ scale: checkScale }] },
           ]}>
-            {agreed && <Ionicons name="checkmark-sharp" size={20} color="#FFF" />}
+            {agreed && <Text style={styles.checkmark}>{Icon.check}</Text>}
           </Animated.View>
           <View style={{ flex: 1 }}>
             <Text style={styles.checkLabel}>
@@ -156,12 +159,12 @@ export default function TermsScreen({ onAccept, onDecline }: Props) {
             style={{ flex: 1.5 }}
           >
             <LinearGradient
-              colors={agreed ? ['#4B28E5', '#6B42FF'] : ['#C4C6CE', '#C4C6CE']}
+              colors={agreed ? ['#1A1B4B', '#2D2E7A'] : ['#C4C6CE', '#C4C6CE']}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.acceptBtn}
             >
               <Text style={styles.acceptBtnText}>Accept & Continue</Text>
-              <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+              <Text style={styles.acceptBtnIcon}>{Icon.checkCircle}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -179,6 +182,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden',
   },
   headerContent: { zIndex: 1 },
+  backBtn: { marginBottom: 12, alignSelf: 'flex-start', padding: 4 },
+  backIcon: { fontSize: 22, color: '#FFF' },
   headerTitle: { fontSize: 22, fontWeight: '800', color: '#FFF', marginBottom: 6 },
   headerSub: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.7)' },
 
@@ -201,6 +206,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04, shadowRadius: 10, elevation: 3,
   },
   termsHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  termsHeaderIcon: { fontSize: 22, color: theme.colors.primary },
   termsMainTitle: { fontSize: 17, fontWeight: '700', color: theme.colors.textMain, marginLeft: 10 },
   termsDate: { fontSize: 12, color: theme.colors.textMuted, marginBottom: 20, fontWeight: '500' },
 
@@ -213,6 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0EDFF', borderRadius: 12,
     paddingHorizontal: 16, paddingVertical: 14, marginTop: 8,
   },
+  contactIcon: { fontSize: 18, color: theme.colors.primary },
   contactText: { fontSize: 13, color: theme.colors.primary, fontWeight: '500', marginLeft: 10, flex: 1 },
 
   // Bottom bar
@@ -241,6 +248,7 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: '#4B28E5', borderWidth: 3, borderColor: '#4B28E5',
   },
+  checkmark: { fontSize: 20, color: '#FFF', fontWeight: '700' },
   checkLabel: { fontSize: 14, color: theme.colors.textMain, lineHeight: 21, fontWeight: '600' },
   checkHint: { fontSize: 11, color: theme.colors.primary, marginTop: 3, fontWeight: '500' },
   linkText: { color: theme.colors.primary, fontWeight: '700', textDecorationLine: 'underline' },
@@ -257,4 +265,5 @@ const styles = StyleSheet.create({
     height: 50, borderRadius: 14,
   },
   acceptBtnText: { color: '#FFF', fontSize: 15, fontWeight: '700', marginRight: 8 },
+  acceptBtnIcon: { color: '#FFF', fontSize: 18 },
 });

@@ -4,15 +4,15 @@ import {
   ActivityIndicator, Animated, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { theme } from '../theme';
+import { theme, Icon } from '../theme';
 
 interface Props {
   onConfirmLocation: () => void;
+  onBack: () => void;
 }
 
-export default function LocationScreen({ onConfirmLocation }: Props) {
+export default function LocationScreen({ onConfirmLocation, onBack }: Props) {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [address, setAddress] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -75,12 +75,15 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#3A1CD9', '#6B42FF']}
+        colors={['#1A1B4B', '#2D2E7A']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <View style={[styles.decorCircle, { top: -15, right: -15, width: 80, height: 80 }]} />
         <View style={styles.headerContent}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+            <Text style={styles.backIcon}>{Icon.back}</Text>
+          </TouchableOpacity>
           <View style={styles.stepRow}>
             <View style={[styles.stepDot, styles.stepDone]} />
             <View style={[styles.stepLine, styles.stepLineDone]} />
@@ -104,7 +107,7 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
         ) : errorMsg ? (
           <View style={styles.errorContainer}>
             <View style={styles.errorIconCircle}>
-              <Ionicons name="location-outline" size={40} color="#FF3B5C" />
+              <Text style={styles.errorIcon}>{Icon.location}</Text>
             </View>
             <Text style={styles.errorTitle}>Location Access Needed</Text>
             <Text style={styles.errorText}>{errorMsg}</Text>
@@ -112,7 +115,7 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
               style={styles.retryBtn}
               onPress={() => { setLoading(true); setErrorMsg(''); }}
             >
-              <Ionicons name="refresh" size={18} color={theme.colors.primary} />
+              <Text style={styles.retryIcon}>{Icon.arrowRight}</Text>
               <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
           </View>
@@ -130,7 +133,7 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
                 <View style={styles.mapFallback}>
                   <Animated.View style={[styles.pinCircleOuter, { transform: [{ scale: pulseAnim }] }]}>
                     <View style={styles.pinCircleInner}>
-                      <Ionicons name="location" size={32} color="#FFF" />
+                      <Text style={styles.pinIcon}>{Icon.location}</Text>
                     </View>
                   </Animated.View>
                   <Text style={styles.coordsText}>
@@ -144,7 +147,7 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
             <View style={styles.addressCard}>
               <View style={styles.addressIconRow}>
                 <View style={styles.addressIconCircle}>
-                  <MaterialCommunityIcons name="map-marker-check" size={22} color={theme.colors.primary} />
+                  <Text style={styles.addressIcon}>{Icon.checkCircle}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.addressLabel}>Detected Location</Text>
@@ -155,7 +158,7 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
 
             {/* Info Pill */}
             <View style={styles.infoPill}>
-              <Ionicons name="shield-checkmark" size={16} color="#4CD964" />
+              <Text style={styles.infoPillIcon}>{Icon.shieldCheck}</Text>
               <Text style={styles.infoPillText}>Your location is used only for weather-based coverage</Text>
             </View>
           </>
@@ -167,12 +170,12 @@ export default function LocationScreen({ onConfirmLocation }: Props) {
         <View style={styles.bottomBar}>
           <TouchableOpacity onPress={onConfirmLocation} activeOpacity={0.85}>
             <LinearGradient
-              colors={['#4B28E5', '#6B42FF']}
+              colors={['#1A1B4B', '#2D2E7A']}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.confirmBtn}
             >
               <Text style={styles.confirmBtnText}>Confirm Location</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
+              <Text style={styles.confirmBtnArrow}>{Icon.arrowRight}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -190,6 +193,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden',
   },
   headerContent: { zIndex: 1 },
+  backBtn: { marginBottom: 12, alignSelf: 'flex-start', padding: 4 },
+  backIcon: { fontSize: 22, color: '#FFF' },
   headerTitle: { fontSize: 22, fontWeight: '800', color: '#FFF', marginBottom: 6 },
   headerSub: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.7)' },
 
@@ -215,13 +220,15 @@ const styles = StyleSheet.create({
     width: 80, height: 80, borderRadius: 40,
     backgroundColor: '#FFF0F3', justifyContent: 'center', alignItems: 'center', marginBottom: 20,
   },
+  errorIcon: { fontSize: 40, color: '#FF3B5C' },
   errorTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.textMain, marginBottom: 8 },
   errorText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
   retryBtn: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#F0EDFF', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14,
   },
-  retryText: { fontSize: 14, fontWeight: '600', color: theme.colors.primary, marginLeft: 8 },
+  retryIcon: { fontSize: 18, color: theme.colors.primary, marginRight: 8 },
+  retryText: { fontSize: 14, fontWeight: '600', color: theme.colors.primary },
 
   // Map
   mapContainer: {
@@ -234,7 +241,7 @@ const styles = StyleSheet.create({
   },
   pinCircleOuter: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(75, 40, 229, 0.15)',
+    backgroundColor: 'rgba(26, 27, 75, 0.15)',
     justifyContent: 'center', alignItems: 'center',
   },
   pinCircleInner: {
@@ -242,6 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: 'center', alignItems: 'center',
   },
+  pinIcon: { fontSize: 32, color: '#FFF' },
   coordsText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted, marginTop: 12 },
 
   // Address Card
@@ -257,6 +265,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0EDFF', justifyContent: 'center', alignItems: 'center',
     marginRight: 14,
   },
+  addressIcon: { fontSize: 22, color: theme.colors.primary },
   addressLabel: { fontSize: 12, fontWeight: '600', color: theme.colors.textMuted, marginBottom: 3 },
   addressText: { fontSize: 14, fontWeight: '600', color: theme.colors.textMain, lineHeight: 20 },
 
@@ -265,6 +274,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#EDFFF2', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
   },
+  infoPillIcon: { fontSize: 16, color: '#4CD964' },
   infoPillText: { fontSize: 12, fontWeight: '500', color: '#108010', marginLeft: 8, flex: 1 },
 
   // Bottom
@@ -274,4 +284,5 @@ const styles = StyleSheet.create({
     height: 54, borderRadius: 16,
   },
   confirmBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700', marginRight: 8 },
+  confirmBtnArrow: { color: '#FFF', fontSize: 18 },
 });
