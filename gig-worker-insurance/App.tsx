@@ -12,13 +12,14 @@ import ClaimsScreen from './src/screens/ClaimsScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import SimulationScreen from './src/screens/SimulationScreen';
+import AIFraudEngineScreen from './src/screens/AIFraudEngineScreen';
 import { start as startTriggerEngine, stop as stopTriggerEngine } from './src/services/triggerEngine';
 import { cleanupOldClaims } from './src/services/claimProcessor';
 import { PayoutProvider } from './src/contexts/PayoutContext';
 
-type Screen = 'SignIn' | 'SignUp' | 'Location' | 'Terms' | 'Onboarding' | 'Home' | 'PolicySelection' | 'Claims' | 'Analytics' | 'Profile' | 'Simulation';
+type Screen = 'SignIn' | 'SignUp' | 'Location' | 'Terms' | 'Onboarding' | 'Home' | 'PolicySelection' | 'Claims' | 'Analytics' | 'Profile' | 'Simulation' | 'AIFraudEngine';
 
-const MAIN_SCREENS: Screen[] = ['Home', 'PolicySelection', 'Claims', 'Analytics', 'Profile', 'Simulation'];
+const MAIN_SCREENS: Screen[] = ['Home', 'PolicySelection', 'Claims', 'Analytics', 'Simulation', 'AIFraudEngine', 'Profile'];
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('SignUp');
@@ -99,6 +100,8 @@ export default function App() {
         return <ProfileScreen zone={userZone} fleet={userFleet} plan={userPlan} onNavigate={navigate} />;
       case 'Simulation':
         return <SimulationScreen zone={userZone} onNavigate={navigate} />;
+      case 'AIFraudEngine':
+        return <AIFraudEngineScreen onNavigate={navigate} />;
       case 'Home':
       default:
         return <HomeScreen zone={userZone} fleet={userFleet} plan={userPlan} onNavigate={navigate} />;
@@ -121,7 +124,8 @@ function BottomTabBar({ current, onNavigate }: { current: Screen; onNavigate: (s
     { id: 'PolicySelection', label: 'Policy', icon: Icon.wallet, activeIcon: Icon.wallet },
     { id: 'Claims', label: 'Claims', icon: Icon.claims, activeIcon: Icon.claims },
     { id: 'Analytics', label: 'Analytics', icon: Icon.analytics, activeIcon: Icon.analytics },
-    { id: 'Simulation', label: 'Simulation', icon: Icon.flash, activeIcon: Icon.flash },
+    { id: 'Simulation', label: 'Simulate', icon: Icon.flash, activeIcon: Icon.flash },
+    { id: 'AIFraudEngine', label: 'AI Guard', icon: Icon.shield, activeIcon: Icon.shield },
     { id: 'Profile', label: 'Profile', icon: Icon.profile, activeIcon: Icon.profile },
   ];
   return (
