@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "cd gig-worker-insurance && npm install && npm run build:web",
+  "outputDirectory": "gig-worker-insurance/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
