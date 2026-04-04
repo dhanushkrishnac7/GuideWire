@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
-  TouchableOpacity, Dimensions
+  TouchableOpacity, Dimensions, Animated, LayoutAnimation, Platform, UIManager
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
+import { usePayouts } from '../contexts/PayoutContext';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8;
+
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface Props {
   zone: string;
@@ -12,216 +21,373 @@ interface Props {
   onNavigate: (screen: string) => void;
 }
 
-const { width } = Dimensions.get('window');
+// Historical Monthly Payouts with Weekly Details - Realistic 150-200 range
+const MONTHLY_HISTORY = [
+  { 
+    month: 'Jan', amount: 185, shieldLevel: 0.8,
+    details: [
+      { w: 1, val: 40, res: 'Rain Delay Relief', icon: 'rainy' },
+      { w: 2, val: 60, res: 'Extreme Heat Support', icon: 'sunny' },
+      { w: 3, val: 45, res: 'Rain Delay Relief', icon: 'rainy' },
+      { w: 4, val: 40, res: 'Light Rain Support', icon: 'rainy' },
+    ]
+  },
+  { 
+    month: 'Feb', amount: 160, shieldLevel: 0.7,
+    details: [
+      { w: 1, val: 160, res: 'Monsoon Flood Protection', icon: 'thunderstorm' },
+      { w: 2, val: 0, res: 'Shield Ready', icon: 'shield-checkmark' },
+      { w: 3, val: 0, res: 'Shield Ready', icon: 'shield-checkmark' },
+      { w: 4, val: 0, res: 'Shield Ready', icon: 'shield-checkmark' },
+    ]
+  },
+  { 
+    month: 'Mar', amount: 195, shieldLevel: 0.9,
+    details: [
+      { w: 1, val: 50, res: 'Heat Relief Support', icon: 'sunny' },
+      { w: 2, val: 50, res: 'Heat Wave Protection', icon: 'sunny' },
+      { w: 3, val: 45, res: 'City Traffic Surge', icon: 'navigate' },
+      { w: 4, val: 50, res: 'High Temp Relief', icon: 'sunny' },
+    ]
+  },
+  { 
+    month: 'Apr', amount: 175, shieldLevel: 0.85,
+    details: [
+      { w: 1, val: 40, res: 'Rain Delay Relief', icon: 'rainy' },
+      { w: 2, val: 0, res: 'Shield Ready', icon: 'shield-checkmark' },
+      { w: 3, val: 85, res: 'Heat Wave Support', icon: 'sunny' },
+      { w: 4, val: 50, res: 'Monsoon Flood Protection', icon: 'thunderstorm' },
+    ]
+  },
+];
+
+const DAILY_STORY = [
+  { day: 'Mon', event: 'Light Rain 🌦️', amount: 20, note: 'Shield covered 30min delay' },
+  { day: 'Tue', event: 'Clear Sky ☀️', amount: 0, note: 'Full 8h work protected' },
+  { day: 'Wed', event: 'High Heat 🌡️', amount: 25, note: 'High temp relief triggered' },
+  { day: 'Thu', event: 'Clear Sky ☀️', amount: 0, note: 'No disruptions detected' },
+  { day: 'Fri', event: 'Heavy Rain 🌧️', amount: 40, note: 'Primary disruption covered' },
+];
+
+const WEEKLY_HISTORY = [
+  { week: 1, amount: 40, status: 'Active Support', reason: 'Rain Delay Relief' },
+  { week: 2, amount: 0, status: 'Shield Ready', reason: 'Shield Ready' },
+  { week: 3, amount: 85, status: 'Active Support', reason: 'Heat Wave Support' },
+  { week: 4, amount: 50, status: 'Active Support', reason: 'Monsoon Flood Protection' },
+];
 
 export default function AnalyticsScreen({ zone, fleet, onNavigate }: Props) {
+  const { totalPayouts } = usePayouts();
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  const displayTotal = totalPayouts + 175;
+
+  const toggleMonth = (month: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedMonth(expandedMonth === month ? null : month);
+  };
+
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top bar matching Figma Screen 5 */}
-      <View style={styles.topBar}>
-        <View style={styles.topLeft}>
-          <TouchableOpacity onPress={() => onNavigate('Profile')}>
-            <View style={styles.avatarCircle}>
-              <Ionicons name="person" size={20} color="#FFF" />
-            </View>
-          </TouchableOpacity>
-          <View style={styles.locationWrap}>
-            <Text style={styles.locationZoneLabel}>BENGALURU SOUTH</Text>
-            <Text style={styles.locationCity}>ANALYTICS</Text>
-          </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => onNavigate('Profile')} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+        <View style={styles.statusPill}>
+          <Animated.View style={[styles.pulseDot, { transform: [{ scale: pulseAnim }] }]} />
+          <Text style={styles.statusText}>SHIELD ACTIVE</Text>
         </View>
-        <View style={styles.protectedPill}>
-          <View style={styles.activeDot} />
-          <Text style={styles.protectedText}>COVERAGE ACTIVE</Text>
-        </View>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim }}>
 
-        {/* Navy Blue Card */}
-        <View style={styles.totalsCard}>
-          <Text style={styles.totalsLabel}>TOTAL EARNINGS PROTECTED</Text>
-          <View style={styles.totalsAmountRow}>
-            <Text style={styles.totalsCurrency}>₹</Text>
-            <Text style={styles.totalsAmount}>14,280</Text>
-            <Text style={styles.totalsSavedText}>Saved</Text>
-          </View>
-          <View style={styles.totalsFooter}>
-            <View style={styles.totalsFooterCol}>
-              <Text style={styles.totalsFooterLabel}>SUCCESS RATE</Text>
-              <Text style={styles.totalsFooterVal}>98.4%</Text>
-            </View>
-            <View style={styles.totalsFooterDivider} />
-            <View style={styles.totalsFooterCol}>
-              <Text style={styles.totalsFooterLabel}>CLAIMS SETTLED</Text>
-              <Text style={styles.totalsFooterVal}>24</Text>
+          {/* Hero - Simplified Financial Hero */}
+          <View style={styles.heroSection}>
+            <Text style={styles.heroLabel}>CASH SECURED THIS MONTH</Text>
+            <Text style={styles.heroAmount}>₹{displayTotal.toLocaleString()}</Text>
+            <View style={styles.heroPill}>
+              <Text style={styles.heroPillText}>PROTECTED FOR 4 MONTHS</Text>
             </View>
           </View>
-        </View>
 
-        {/* Weekly Resilience */}
-        <View style={styles.resilienceHeader}>
-          <Text style={styles.resilienceTitle}>Weekly Resilience</Text>
-          <Text style={styles.resilienceSub}>LAST 7 DAYS</Text>
-        </View>
-
-        <View style={styles.resilienceMetrics}>
-          <View>
-            <Text style={styles.resilienceMetricVal}>42h 15m</Text>
-            <Text style={styles.resilienceMetricLabel}>Total Working Hours</Text>
+          {/* Daily Resilience Scroll */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Disruptions Phase</Text>
+            <View style={styles.liveBadge}>
+               <View style={styles.liveDot} />
+               <Text style={styles.liveBadgeText}>LIVE SYNC</Text>
+            </View>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={[styles.resilienceMetricVal, { color: '#FF7A45' }]}>38h 20m</Text>
-            <Text style={styles.resilienceMetricLabel}>PROTECTED TIME</Text>
-          </View>
-        </View>
-
-        {/* Bar Chart Simulation */}
-        <View style={styles.chartArea}>
-          <View style={styles.chartBars}>
-            {[40, 60, 50, 70, 60, 80, 50].map((h, i) => (
-              <View key={i} style={styles.barCol}>
-                <View style={styles.barBg}>
-                  <View style={[styles.barFill, { height: `${h}%` }]} />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScroll}
+            snapToInterval={CARD_WIDTH + 16}
+            decelerationRate="fast"
+          >
+            {DAILY_STORY.map((item, i) => {
+              const isActive = item.amount > 0;
+              return (
+                <View key={i} style={[styles.dayCard, isActive && styles.dayCardActive]}>
+                  {isActive && <View style={styles.glowEffect} />}
+                  
+                  <View style={styles.dayTop}>
+                    <View style={[styles.datePill, isActive && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
+                      <Text style={[styles.dayText, isActive && styles.dayTextActive]}>{item.day}</Text>
+                    </View>
+                    <View style={[styles.iconCircle, isActive && styles.iconCircleActive]}>
+                      <Ionicons
+                        name={isActive ? "shield-checkmark" : "shield-outline"}
+                        size={16}
+                        color={isActive ? "#10B981" : theme.colors.textMuted}
+                      />
+                    </View>
+                  </View>
+                  
+                  <View style={styles.eventContainer}>
+                    <Text style={[styles.eventLabel, isActive && styles.eventLabelActive]}>{item.event}</Text>
+                    <Text style={[styles.dayNote, isActive && styles.dayNoteActive]}>{item.note}</Text>
+                  </View>
+                  
+                  <View style={[styles.dayDivider, isActive && styles.dayDividerActive]} />
+                  
+                  <View style={styles.dayBottom}>
+                    <Text style={[styles.amountLabel, isActive && styles.amountLabelActive]}>
+                      {isActive ? 'PAYOUT TRIGGERED' : 'STATUS'}
+                    </Text>
+                    <Text style={[styles.dayAmount, isActive && styles.dayAmountActive]}>
+                      {isActive ? `+₹${item.amount}` : 'SECURED'}
+                    </Text>
+                  </View>
                 </View>
-                <Text style={styles.barDay}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</Text>
+              );
+            })}
+          </ScrollView>
+
+          {/* Weekly Shield Status - Current Month Breakdown */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Weekly Shield Status</Text>
+          </View>
+          <View style={styles.weeklyCard}>
+            {WEEKLY_HISTORY.map((w, i) => (
+              <View key={i} style={styles.weeklyRow}>
+                <View style={styles.weeklyInfo}>
+                  <Text style={styles.weekLabel}>WEEK {i + 1}</Text>
+                  <Text style={styles.weekStatus}>{w.reason}</Text>
+                </View>
+                <View style={styles.weekResult}>
+                  <Text style={[styles.weekAmount, w.amount > 0 && { color: '#039855' }]}>
+                    {w.amount > 0 ? `+₹${w.amount}` : 'SECURED'}
+                  </Text>
+                  <Ionicons 
+                    name={w.amount > 0 ? "checkmark-circle" : "shield"} 
+                    size={16} 
+                    color={w.amount > 0 ? "#039855" : theme.colors.textMuted} 
+                  />
+                </View>
               </View>
             ))}
           </View>
-          <View style={styles.chartLegendRow}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#FF7A45' }]} />
-              <Text style={styles.legendText}>PROTECTED</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#E0E2EA' }]} />
-              <Text style={styles.legendText}>UNPROTECTED</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Two Mini Cards Row */}
-        <View style={styles.miniCardsRow}>
-          <View style={[styles.miniCard, { flex: 1, marginRight: 8 }]}>
-            <View style={styles.miniCardIcon}>
-              <Ionicons name="water" size={20} color="#FFCC00" />
-            </View>
-            <Text style={styles.miniCardTitle}>82%</Text>
-            <Text style={styles.miniCardDesc}>Claims due to waterlogging in South Zone</Text>
-            <View style={styles.miniCardBar}>
-              <View style={[styles.miniCardBarFill, { width: '82%' }]} />
-            </View>
-          </View>
-          <View style={[styles.miniCard, { flex: 1, marginLeft: 8 }]}>
-            <View style={styles.miniCardIconBlue}>
-              <Ionicons name="shield-checkmark" size={20} color="#FFF" />
-            </View>
-            <Text style={styles.miniCardTitleBlue}>IDENTITY SECURED</Text>
-            <Text style={styles.miniCardDesc}>Biometric & GPS anti-fraud active</Text>
-            <View style={styles.verifiedPill}>
-              <Text style={styles.verifiedPillText}>VERIFIED</Text>
+          {/* Monthly History Chart View */}
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Monthly History</Text>
+            <View style={styles.chartRow}>
+              {MONTHLY_HISTORY.map((m, i) => (
+                <View key={i} style={styles.chartCol}>
+                  <View style={styles.barContainer}>
+                    <View style={[styles.barFill, { 
+                      height: `${m.shieldLevel * 100}%`, 
+                      backgroundColor: i === 3 ? theme.colors.primary : '#E4E7EC' 
+                    }]} />
+                  </View>
+                  <Text style={styles.chartMonthLabel}>{m.month}</Text>
+                  <Text style={[styles.chartVal, i === 3 && { color: theme.colors.primary, fontWeight: '900' }]}>
+                    ₹{m.amount}
+                  </Text>
+                </View>
+              ))}
             </View>
           </View>
-        </View>
 
-        {/* Smart Tip */}
-        <View style={styles.smartTipCard}>
-          <View style={styles.smartTipIconBox}>
-            <Ionicons name="bulb" size={24} color="#8A5000" />
-          </View>
-          <View style={styles.smartTipBody}>
-            <Text style={styles.smartTipTitle}>Smart Tip for You</Text>
-            <Text style={styles.smartTipText}>
-              Partners in your area earned 15% more by enabling 'Rain Shield' during evening hours. Keep yours active!
-            </Text>
-          </View>
-        </View>
+          {/* Protection Overview - INTERACTIVE ACCORDION AREA */}
+          <View style={styles.vizCard}>
+            <Text style={styles.vizTitle}>Protection Overview</Text>
+            <View style={styles.vizRows}>
+              {MONTHLY_HISTORY.map((m, idx) => (
+                <View key={idx} style={[styles.accordionItem, expandedMonth === m.month && styles.accordionItemActive]}>
+                  <TouchableOpacity 
+                    onPress={() => toggleMonth(m.month)}
+                    style={styles.vizRow}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.vizIcon, expandedMonth === m.month && styles.vizIconActive]}>
+                      <Ionicons 
+                        name={expandedMonth === m.month ? "chevron-down" : "shield-checkmark"} 
+                        size={16} 
+                        color={expandedMonth === m.month ? "#FFF" : theme.colors.primary} 
+                      />
+                    </View>
+                    <View style={styles.vizTextCol}>
+                      <Text style={styles.vizRowTitle}>{m.month} Secured</Text>
+                      <Text style={styles.vizRowSub}>₹{m.amount} total coverage received</Text>
+                    </View>
+                    <Ionicons 
+                      name={expandedMonth === m.month ? "eye-off-outline" : "eye-outline"} 
+                      size={18} 
+                      color={theme.colors.textMuted} 
+                    />
+                  </TouchableOpacity>
 
-        <View style={{ height: 100 }} />
+                  {expandedMonth === m.month && (
+                    <View style={styles.detailsContainer}>
+                      <View style={styles.detailsDivider} />
+                      {m.details.map((det, i) => (
+                        <View key={i} style={styles.detailRow}>
+                          <View style={styles.detailIconBox}>
+                            <Ionicons name={det.icon as any} size={14} color={theme.colors.primary} />
+                          </View>
+                          <Text style={styles.detailWeek}>W{det.w}</Text>
+                          <Text style={styles.detailReason}>{det.res}</Text>
+                          <Text style={[styles.detailAmount, det.val > 0 && { color: '#039855' }]}>
+                            {det.val > 0 ? `+₹${det.val}` : 'SECURED'}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.footerSpace} />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F7' },
-  topBar: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#F5F5F7'
+  container: { flex: 1, backgroundColor: '#FFF' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F2F4F7'
   },
-  topLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatarCircle: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#FF7A45', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#FFF'
-  },
-  locationWrap: { justifyContent: 'center' },
-  locationZoneLabel: { fontSize: 10, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 0.5 },
-  locationCity: { fontSize: 16, fontWeight: '900', color: theme.colors.primary, marginTop: 2 },
-  protectedPill: {
+  backButton: { padding: 8 },
+  statusPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#E8EEFE', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    backgroundColor: '#ECFDF3', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100
   },
-  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FF7A45' },
-  protectedText: { fontSize: 10, fontWeight: '800', color: theme.colors.primary, letterSpacing: 0.5 },
+  pulseDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#039855' },
+  statusText: { fontSize: 10, fontWeight: '800', color: '#039855', letterSpacing: 0.5 },
 
-  scroll: { paddingTop: 10, paddingBottom: 40 },
+  scroll: { paddingTop: 20 },
 
-  // Totals Card
-  totalsCard: {
-    marginHorizontal: 16, backgroundColor: theme.colors.primary, borderRadius: 16,
-    padding: 24, marginBottom: 24, shadowColor: '#1A1B4B', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 6,
+  // Hero
+  heroSection: { alignItems: 'center', marginBottom: 40 },
+  heroLabel: { fontSize: 10, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 1, marginBottom: 8 },
+  heroAmount: { fontSize: 52, fontWeight: '900', color: theme.colors.primary, marginBottom: 16 },
+  heroPill: { backgroundColor: theme.colors.primary + '10', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100 },
+  heroPillText: { fontSize: 11, fontWeight: '800', color: theme.colors.primary },
+
+  // Section Header
+  sectionHeader: { paddingHorizontal: 24, marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionTitle: { fontSize: 16, fontWeight: '900', color: theme.colors.primary },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF3', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4 },
+  liveBadgeText: { fontSize: 10, fontWeight: '800', color: '#039855', letterSpacing: 1 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#039855' },
+
+  // Daily Scroll
+  horizontalScroll: { paddingHorizontal: 24, gap: 16, paddingBottom: 24 },
+  dayCard: { 
+    width: CARD_WIDTH, backgroundColor: '#FFF', borderRadius: 28, padding: 24, 
+    borderWidth: 1, borderColor: '#EAECF0',
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    position: 'relative', overflow: 'hidden'
   },
-  totalsLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.6)', letterSpacing: 1.5, marginBottom: 10 },
-  totalsAmountRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 24 },
-  totalsCurrency: { fontSize: 32, fontWeight: '800', color: '#FFF', marginBottom: 6, marginRight: 4 },
-  totalsAmount: { fontSize: 48, fontWeight: '900', color: '#FFF', lineHeight: 54 },
-  totalsSavedText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.6)', marginBottom: 8, marginLeft: 8 },
-  totalsFooter: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 16 },
-  totalsFooterCol: { flex: 1 },
-  totalsFooterLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 0.5, marginBottom: 4 },
-  totalsFooterVal: { fontSize: 20, color: '#FFF', fontWeight: '800' },
-  totalsFooterDivider: { width: 1, height: '100%', backgroundColor: 'rgba(255,255,255,0.1)' },
+  dayCardActive: { 
+    backgroundColor: '#0F172A', borderColor: '#0F172A',
+    shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8
+  },
+  glowEffect: { 
+    position: 'absolute', top: -40, right: -40, width: 120, height: 120, 
+    borderRadius: 60, backgroundColor: '#10B981', opacity: 0.1 
+  },
+  dayTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, zIndex: 1 },
+  datePill: { backgroundColor: '#F2F4F7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  dayText: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted },
+  dayTextActive: { color: '#FFF' },
+  iconCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F2F4F7', justifyContent: 'center', alignItems: 'center' },
+  iconCircleActive: { backgroundColor: 'rgba(16, 185, 129, 0.15)' },
+  eventContainer: { marginBottom: 20, zIndex: 1 },
+  eventLabel: { fontSize: 20, fontWeight: '900', color: theme.colors.primary, marginBottom: 8 },
+  eventLabelActive: { color: '#FFF' },
+  dayDivider: { height: 1, backgroundColor: '#EAECF0', marginBottom: 20, zIndex: 1 },
+  dayDividerActive: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  dayBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 1 },
+  amountLabel: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1, marginBottom: 4 },
+  amountLabelActive: { color: 'rgba(255,255,255,0.5)' },
+  dayAmount: { fontSize: 28, fontWeight: '900', color: theme.colors.textMuted },
+  dayAmountActive: { color: '#10B981' },
+  dayNote: { fontSize: 13, color: theme.colors.textSub, lineHeight: 20 },
+  dayNoteActive: { color: 'rgba(255,255,255,0.7)' },
 
-  // Resilience
-  resilienceHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginBottom: 16 },
-  resilienceTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.primary },
-  resilienceSub: { fontSize: 10, fontWeight: '700', color: '#FF7A45', letterSpacing: 1.5 },
+  // Weekly Card
+  weeklyCard: { marginHorizontal: 24, backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 32, borderWidth: 1, borderColor: '#EAECF0' },
+  weeklyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F2F4F7' },
+  weeklyInfo: { gap: 2 },
+  weekLabel: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted },
+  weekStatus: { fontSize: 13, fontWeight: '700', color: theme.colors.primary },
+  weekResult: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  weekAmount: { fontSize: 15, fontWeight: '800', color: theme.colors.textMuted },
 
-  resilienceMetrics: { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 16, marginBottom: 24 },
-  resilienceMetricVal: { fontSize: 18, fontWeight: '800', color: theme.colors.textMain, marginBottom: 4 },
-  resilienceMetricLabel: { fontSize: 11, color: theme.colors.textMuted, fontWeight: '600' },
+  // Chart Card
+  chartCard: { marginHorizontal: 24, backgroundColor: '#FFF', borderRadius: 28, padding: 24, marginBottom: 32, borderWidth: 1, borderColor: '#EAECF0' },
+  chartTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.primary, marginBottom: 24 },
+  chartRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingHorizontal: 4 },
+  chartCol: { alignItems: 'center', width: 50 },
+  barContainer: { height: 60, width: 12, backgroundColor: '#F2F4F7', borderRadius: 6, justifyContent: 'flex-end', marginBottom: 10, overflow: 'hidden' },
+  barFill: { width: '100%', borderRadius: 6 },
+  chartMonthLabel: { fontSize: 10, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 4 },
+  chartVal: { fontSize: 10, color: theme.colors.textMuted },
 
-  // Chart
-  chartArea: { marginHorizontal: 16, marginBottom: 24 },
-  chartBars: { flexDirection: 'row', justifyContent: 'space-between', height: 120, marginBottom: 16 },
-  barCol: { alignItems: 'center', justifyContent: 'flex-end', flex: 1 },
-  barBg: { width: 24, height: 100, backgroundColor: '#E0E2EA', borderRadius: 6, overflow: 'hidden', justifyContent: 'flex-end', marginBottom: 8 },
-  barFill: { width: '100%', backgroundColor: '#FF7A45', borderRadius: 6 },
-  barDay: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted },
-  chartLegendRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 10, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 0.5 },
+  // Viz Card
+  vizCard: { marginHorizontal: 24, backgroundColor: '#F8F9FC', borderRadius: 28, padding: 24, marginBottom: 40 },
+  vizTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.primary, marginBottom: 24 },
+  vizRows: { gap: 12 },
+  accordionItem: { backgroundColor: '#FFF', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#EAECF0' },
+  accordionItemActive: { borderColor: theme.colors.primary, backgroundColor: '#FFF' },
+  vizRow: { flexDirection: 'row', gap: 16, alignItems: 'center', padding: 16 },
+  vizIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#EAECF0' },
+  vizIconActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  vizTextCol: { flex: 1 },
+  vizRowTitle: { fontSize: 13, fontWeight: '700', color: theme.colors.primary, marginBottom: 2 },
+  vizRowSub: { fontSize: 11, color: theme.colors.textMuted },
+  
+  detailsContainer: { paddingHorizontal: 16, paddingBottom: 16 },
+  detailsDivider: { height: 1, backgroundColor: '#F2F4F7', marginBottom: 12 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  detailIconBox: { width: 24, height: 24, borderRadius: 6, backgroundColor: '#F2F4F7', justifyContent: 'center', alignItems: 'center' },
+  detailWeek: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted, width: 28 },
+  detailReason: { fontSize: 11, fontWeight: '600', color: theme.colors.primary, flex: 1 },
+  detailAmount: { fontSize: 12, fontWeight: '800', color: theme.colors.textMuted },
 
-  // Mini Cards
-  miniCardsRow: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 20 },
-  miniCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: theme.colors.border },
-  miniCardIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF5E6', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  miniCardTitle: { fontSize: 24, fontWeight: '900', color: theme.colors.primary, marginBottom: 4 },
-  miniCardDesc: { fontSize: 11, color: theme.colors.textSub, lineHeight: 16, flex: 1, marginBottom: 16 },
-  miniCardBar: { height: 4, width: '100%', backgroundColor: '#E0E2EA', borderRadius: 2 },
-  miniCardBarFill: { height: '100%', backgroundColor: '#FFCC00', borderRadius: 2 },
-
-  miniCardIconBlue: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  miniCardTitleBlue: { fontSize: 13, fontWeight: '900', color: theme.colors.primary, marginBottom: 4 },
-  verifiedPill: { backgroundColor: theme.colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, alignSelf: 'flex-start' },
-  verifiedPillText: { fontSize: 10, fontWeight: '800', color: '#FFF' },
-
-  // Smart Tip
-  smartTipCard: { marginHorizontal: 16, backgroundColor: '#FFF5E6', borderRadius: 16, padding: 20, flexDirection: 'row', gap: 16 },
-  smartTipIconBox: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center' },
-  smartTipBody: { flex: 1 },
-  smartTipTitle: { fontSize: 14, fontWeight: '800', color: '#8A5000', marginBottom: 6 },
-  smartTipText: { fontSize: 12, color: '#A76000', lineHeight: 18 },
+  footerSpace: { height: 100 }
 });

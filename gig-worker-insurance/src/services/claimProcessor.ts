@@ -145,10 +145,46 @@ export async function verifyClaim(
     });
   }
 
-  // Step 4: Adversarial Defense & Anti-Spoofing (Isolation Forest sim)
+  // Step 4: Adversarial Defense & Anti-Spoofing checks
   const fraudCheckTimestamp = Date.now();
-  // Simulate Isolation Forest score considering device fingerprint, history, payout vs income, claim frequency
-  // Range: <0.3 Auto-approve | 0.3-0.6 24hr hold | >0.6 Reject & flag
+  
+  // 4a. Multi-App Harvesting (UPI Deduplication)
+  if (worker.activePlatformCount && worker.activePlatformCount > 1) {
+    steps.push({
+      step: 'deduplication_check',
+      timestamp: fraudCheckTimestamp,
+      result: 'fail',
+      details: 'UPI Deduplication active: Context matches concurrent active claim on secondary aggregator.',
+    });
+    approved = false;
+    rejectionReason = rejectionReason || 'Claim Blocked: Multi-App Collision Detected';
+  }
+
+  // 4b. Ghost Riding (IMU Sensor Fusion)
+  if (worker.imuMovementDetected === false) {
+    steps.push({
+      step: 'sensor_fusion_check',
+      timestamp: fraudCheckTimestamp,
+      result: 'fail',
+      details: 'Sensor Anomaly: Mobile platform completely stationary despite movement coordinates.',
+    });
+    approved = false;
+    rejectionReason = rejectionReason || 'Claim Blocked: Device automation detected';
+  }
+
+  // 4c. Activity Manipulation (Tiering graph)
+  if (worker.activeDeliveryDays !== undefined && worker.activeDeliveryDays < 5) {
+    steps.push({
+      step: 'activity_tiering_check',
+      timestamp: fraudCheckTimestamp,
+      result: 'fail',
+      details: 'Risk engine blocked: Account fails minimum underwriting tiering (< 5 days).',
+    });
+    approved = false;
+    rejectionReason = rejectionReason || 'Claim Blocked: Activity constraints not met';
+  }
+
+  // 4d. Isolation Forest / RF Anomaly sim (General simulation)
   const randomFraudBase = Math.random(); // mock logic
   // Slightly increase fraud score if location distance is borderline (e.g. 4-5km)
   const penalty = distance > 4 ? 0.3 : 0;
@@ -161,6 +197,7 @@ export async function verifyClaim(
       result: 'fail',
       details: `Isolation Forest flagged claim. Score: ${simulatedFraudScore.toFixed(2)} (High Risk)`,
     });
+    // Don't overwrite higher precedence rejection reasons
     approved = false;
     rejectionReason = rejectionReason || 'Claim flagged by anti-spoofing model (High Risk)';
   } else if (simulatedFraudScore >= 0.3) {
@@ -170,7 +207,6 @@ export async function verifyClaim(
       result: 'fail',
       details: `Isolation Forest flagged claim. Score: ${simulatedFraudScore.toFixed(2)} (Medium Risk - Hold)`,
     });
-    // Not technically "rejected" but we fail it here and rewrite status to FRAUD_HOLD in processTrigger
     approved = false;
     rejectionReason = rejectionReason || `FRAUD_HOLD_24HR - Score: ${simulatedFraudScore.toFixed(2)}`;
   } else {

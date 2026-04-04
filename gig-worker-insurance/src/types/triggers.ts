@@ -58,6 +58,9 @@ export interface WorkerContext {
   currentLocation: { lat: number; lon: number };
   activeZone: string;
   upiId: string;
+  activePlatformCount?: number;
+  imuMovementDetected?: boolean;
+  activeDeliveryDays?: number;
 }
 
 /**

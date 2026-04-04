@@ -76,7 +76,7 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
                 <Text style={{ fontSize: 36 }}>🛡️</Text>
               </View>
               <Text style={styles.appName}>GigShield</Text>
-              <Text style={styles.appTagline}>Gig Worker Insurance</Text>
+              <Text style={styles.appTagline}>Zero-Touch Income Protection</Text>
             </Animated.View>
           </LinearGradient>
 
@@ -85,8 +85,8 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
             styles.formCard,
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}>
-            <Text style={styles.welcomeText}>Welcome Back 👋</Text>
-            <Text style={styles.subtitleText}>Sign in to continue to your dashboard</Text>
+            <Text style={styles.welcomeText}>Welcome Warrior 👋</Text>
+            <Text style={styles.subtitleText}>Sign in to access your protective shield</Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email or Phone</Text>
