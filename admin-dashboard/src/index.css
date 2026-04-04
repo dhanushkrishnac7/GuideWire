@@ -1,0 +1,122 @@
+:root {
+  --bg-color: #F5F5F7;
+  --surface-color: #FFFFFF;
+  --primary-color: #1A1B4B;
+  --primary-light: #2D2E7A;
+  --accent-color: #E8472A;
+  --success-color: #2ECC71;
+  --warning-color: #F39C12;
+  --danger-color: #E74C3C;
+  --text-main: #1A1B4B;
+  --text-sub: #4A4B6A;
+  --text-muted: #9B9BB5;
+  --border-color: #E8E8F0;
+  --shadow-color: rgba(26, 27, 75, 0.08);
+  
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: var(--text-main);
+  background-color: var(--bg-color);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--bg-color);
+}
+
+#root {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.4s ease-out forwards;
+}
+
+/* Utility classes */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+/* Base layouts */
+.dashboard-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary-color);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-sub {
+  color: var(--text-sub);
+}
