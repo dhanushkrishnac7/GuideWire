@@ -35,7 +35,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
             <View style={styles.logoIcon}>
               <Ionicons name="shield" size={16} color="#FFF" />
             </View>
-            <Text style={styles.logoText}>KINETIC</Text>
+            <Text style={styles.logoText}>HUMSAFAR</Text>
           </View>
           <View style={styles.stepPill}>
             <Text style={styles.stepText}>STEP 1 OF 3</Text>

@@ -17,7 +17,7 @@ Key differences from the initial phase/README:
 A. Onboarding & Policy Selection (Insurance Management)
 - Users quickly designate their fleet (Food Delivery, Logisics) and bind their Delivery ID.
 - Dynamic AI Risk Intelligence provides hyper-local exposure levels (e.g., Bengaluru South marks a 78% risk).
-- Pricing Model: Evaluates local environmental factors to charge appropriately (Kinetic Premium / Standard Safety) tied exclusively to a weekly recurring billing cycle.
+- Pricing Model: Evaluates local environmental factors to charge appropriately (Humsafar Premium / Standard Safety) tied exclusively to a weekly recurring billing cycle.
 
 B. Parametric Verification Engine (Zero-Touch Claims)
 - Event listeners evaluate mock API endpoints (Weather/Traffic/Flood) against rigid AI thresholds (e.g. >50mm/hr of rain).

@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function PolicySelectionScreen({ onBack, zone, onPlanSelected }: Props) {
-    const [selectedPlan, setSelectedPlan] = useState('Kinetic');
+    const [selectedPlan, setSelectedPlan] = useState('Humsafar');
 
     return (
         <SafeAreaView style={styles.container}>
@@ -80,15 +80,15 @@ export default function PolicySelectionScreen({ onBack, zone, onPlanSelected }: 
                     </View>
                 </View>
 
-                {/* Kinetic Premium */}
+                {/* Humsafar Premium */}
                 <TouchableOpacity
-                    style={[styles.planCard, selectedPlan === 'Kinetic' && styles.planCardActive]}
-                    onPress={() => setSelectedPlan('Kinetic')}
+                    style={[styles.planCard, selectedPlan === 'Humsafar' && styles.planCardActive]}
+                    onPress={() => setSelectedPlan('Humsafar')}
                     activeOpacity={0.8}
                 >
                     <View style={styles.planHeader}>
                         <View>
-                            <Text style={styles.planTitleWhite}>Kinetic Premium</Text>
+                            <Text style={styles.planTitleWhite}>Humsafar Premium</Text>
                             <Text style={styles.planDescWhite}>Full Resilience Shield</Text>
                         </View>
                         <View style={styles.recommendedBadge}>
