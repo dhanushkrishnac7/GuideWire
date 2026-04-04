@@ -4,7 +4,7 @@
 
 1. OVERVIEW & WHAT HAS CHANGED
 ---------------------------------------------------
-In Phase 1, GigShield established the foundational structure for an income protection platform for gig workers. In Phase 2, the application underwent a complete architectural and visual redesign focusing on **Zero-Touch Automation**, **Adversarial Fraud Defense**, and **Dynamic ML Risk Pricing**.
+In Phase 1, Humsafar established the foundational structure for an income protection platform for gig workers. In Phase 2, the application underwent a complete architectural and visual redesign focusing on **Zero-Touch Automation**, **Adversarial Fraud Defense**, and **Dynamic ML Risk Pricing**.
 
 Key differences from the initial phase/README:
 - UI Overhaul: Migrated from a bare-bones dark theme to a bright, conversion-optimized Light Theme mimicking an enterprise fin-tech application. The screens have been redesigned 1:1 with high-fidelity mockups.

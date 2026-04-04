@@ -1,7 +1,7 @@
-# GigShield - 2 Minute Video Script
+# Humsafar - 2 Minute Video Script
 
 **[0:00 - 0:10] Opening**
-"Welcome to GigShield - an AI-powered parametric insurance platform protecting India's 5 million delivery workers from income loss due to weather and traffic disruptions."
+"Welcome to Humsafar - an AI-powered parametric insurance platform protecting India's 5 million delivery workers from income loss due to weather and traffic disruptions."
 
 **[0:10 - 0:25] Onboarding Screen**
 "The journey starts with our onboarding screen where delivery partners select their fleet - whether they work for Zomato, Swiggy, Blinkit, or other platforms. They enter their delivery ID and choose their coverage plan. The interface is designed for quick signup with no paperwork required - protection starts at just 5 rupees per day."
@@ -22,7 +22,7 @@
 "The profile screen shows the worker's GScore - a risk profiling metric based on work history, zone, and claim patterns. Workers see their weekly premium, policy details, and coverage status. The exclusions section clearly states what's not covered - this is income protection only, not health or accident insurance. Workers can access their policy, claims history, and analytics from here."
 
 **[1:50 - 2:00] Closing**
-"GigShield provides instant, automatic income protection without manual claims. Payouts happen in seconds when parametric conditions are met. The system is transparent, fraud-resistant, and designed to scale across India's entire gig economy. Thank you."
+"Humsafar provides instant, automatic income protection without manual claims. Payouts happen in seconds when parametric conditions are met. The system is transparent, fraud-resistant, and designed to scale across India's entire gig economy. Thank you."
 
 ---
 

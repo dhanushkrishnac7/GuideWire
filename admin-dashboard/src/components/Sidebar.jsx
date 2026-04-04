@@ -37,7 +37,7 @@ const Sidebar = () => {
     <div className="sidebar animate-slide-in">
       <div className="sidebar-header">
         <span className="logo-icon"><ShieldIcon /></span>
-        <h2>GigWire Admin</h2>
+        <h2>Humsafar Admin</h2>
       </div>
 
       <nav className="sidebar-nav">

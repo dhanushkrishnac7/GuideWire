@@ -470,7 +470,7 @@ export default function AIFraudEngineScreen({ onNavigate }: Props) {
                 <View style={[styles.dot, {backgroundColor:'#FF5F56'}]} />
                 <View style={[styles.dot, {backgroundColor:'#FFBD2E'}]} />
                 <View style={[styles.dot, {backgroundColor:'#27C93F'}]} />
-                <Text style={styles.terminalLabel}>gigshield_engine:/live_stream</Text>
+                <Text style={styles.terminalLabel}>humsafar_engine:/live_stream</Text>
               </View>
               <ScrollView 
                 ref={scrollRef}

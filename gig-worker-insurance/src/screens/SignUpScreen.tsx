@@ -84,7 +84,7 @@ export default function SignUpScreen({ onSignUpSuccess, onGoToSignIn }: Props) {
                 <Text style={{ fontSize: 30 }}>👤</Text>
               </View>
               <Text style={styles.headerTitle}>Join the Heroes</Text>
-              <Text style={styles.headerSub}>GigShield: Zero-Touch Protection for India's Last-Mile Warriors</Text>
+              <Text style={styles.headerSub}>Humsafar: Zero-Touch Protection for India's Last-Mile Warriors</Text>
             </View>
           </LinearGradient>
 

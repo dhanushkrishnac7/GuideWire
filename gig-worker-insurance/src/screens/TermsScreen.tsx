@@ -15,7 +15,7 @@ interface Props {
 const TERMS_SECTIONS = [
   {
     title: '1. AGREEMENT TO TERMS',
-    body: 'These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("User" or "you") and GigShield ("Company," "we," "us," or "our"). By accessing the platform, you acknowledge that you have read, understood, and agreed to be bound by all of these Terms of Service.',
+    body: 'These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("User" or "you") and Humsafar ("Company," "we," "us," or "our"). By accessing the platform, you acknowledge that you have read, understood, and agreed to be bound by all of these Terms of Service.',
   },
   {
     title: '2. DEFINITIONS',
@@ -23,7 +23,7 @@ const TERMS_SECTIONS = [
   },
   {
     title: '3. SCOPE OF PARAMETRIC COVERAGE',
-    body: 'GigShield provides automated income protection triggered exclusively by verified environmental data (Rain, Heat, AQI, Floods) and social disruptions (Curfews, Strikes). Performance is monitored within the User\'s active "Work Zone" geofence. Coverage is subject to a 2-hour cooldown period between identical trigger events.',
+    body: 'Humsafar provides automated income protection triggered exclusively by verified environmental data (Rain, Heat, AQI, Floods) and social disruptions (Curfews, Strikes). Performance is monitored within the User\'s active "Work Zone" geofence. Coverage is subject to a 2-hour cooldown period between identical trigger events.',
   },
   {
     title: '4. DYNAMIC PRICING & BILLING',
@@ -35,7 +35,7 @@ const TERMS_SECTIONS = [
   },
   {
     title: '6. COMPREHENSIVE EXCLUSIONS',
-    body: 'GigShield explicitly excludes coverage for any losses directly or indirectly arising from: (a) War, hostilities, or acts of foreign enemies; (b) Ionizing radiation or contamination by radioactivity; (c) Sovereign acts including nationalization, confiscation or requisition; (d) Intentional fraud, GPS spoofing, or criminal conduct; (e) Use of intoxicating liquor or prohibited substances; and (f) Any loss covered by separate Health, Life, or Personal Accident insurance.',
+    body: 'Humsafar explicitly excludes coverage for any losses directly or indirectly arising from: (a) War, hostilities, or acts of foreign enemies; (b) Ionizing radiation or contamination by radioactivity; (c) Sovereign acts including nationalization, confiscation or requisition; (d) Intentional fraud, GPS spoofing, or criminal conduct; (e) Use of intoxicating liquor or prohibited substances; and (f) Any loss covered by separate Health, Life, or Personal Accident insurance.',
   },
   {
     title: '7. DATA PRIVACY & SECURITY',
@@ -43,7 +43,7 @@ const TERMS_SECTIONS = [
   },
   {
     title: '8. LIMITATION OF LIABILITY',
-    body: 'To the maximum extent permitted by law, GigShield\'s liability is capped at 5x the weekly premium paid. We are not liable for consequential damages, platform downtime due to external server failures, or inaccuracies in third-party meteorological data.',
+    body: 'To the maximum extent permitted by law, Humsafar\'s liability is capped at 5x the weekly premium paid. We are not liable for consequential damages, platform downtime due to external server failures, or inaccuracies in third-party meteorological data.',
   },
   {
     title: '9. GOVERNING LAW & JURISDICTION',

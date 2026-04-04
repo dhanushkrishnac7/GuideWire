@@ -75,7 +75,7 @@ export default function SignInScreen({ onSignIn, onGoToSignUp }: Props) {
               <View style={styles.logoCircle}>
                 <Text style={{ fontSize: 36 }}>🛡️</Text>
               </View>
-              <Text style={styles.appName}>GigShield</Text>
+              <Text style={styles.appName}>Humsafar</Text>
               <Text style={styles.appTagline}>Zero-Touch Income Protection</Text>
             </Animated.View>
           </LinearGradient>

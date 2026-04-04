@@ -67,7 +67,7 @@ export default function ProfileScreen({ zone, fleet, plan, onNavigate }: Props) 
                                 <Ionicons name="shield-checkmark" size={20} color={theme.colors.success} />
                             </View>
                             <View>
-                                <Text style={styles.detailLabel}>GigShield Plan</Text>
+                                <Text style={styles.detailLabel}>Humsafar Plan</Text>
                                 <Text style={styles.detailValue}>{plan} Plan (Weekly)</Text>
                             </View>
                         </View>
