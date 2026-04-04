@@ -4,6 +4,7 @@ import {
   TouchableOpacity, Dimensions, Animated, LayoutAnimation, Platform, UIManager
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
 import { usePayouts } from '../contexts/PayoutContext';
 
@@ -62,11 +63,11 @@ const MONTHLY_HISTORY = [
 ];
 
 const DAILY_STORY = [
-  { day: 'Mon', event: 'Light Rain 🌦️', amount: 20, note: 'Shield covered 30min delay' },
-  { day: 'Tue', event: 'Clear Sky ☀️', amount: 0, note: 'Full 8h work protected' },
-  { day: 'Wed', event: 'High Heat 🌡️', amount: 25, note: 'High temp relief triggered' },
-  { day: 'Thu', event: 'Clear Sky ☀️', amount: 0, note: 'No disruptions detected' },
-  { day: 'Fri', event: 'Heavy Rain 🌧️', amount: 40, note: 'Primary disruption covered' },
+  { day: 'Mon', event: 'Light Rain', amount: 20, note: 'Shield covered 30min delay', icon: 'partly-sunny' },
+  { day: 'Tue', event: 'Clear Sky', amount: 0, note: 'Full 8h work protected', icon: 'sunny' },
+  { day: 'Wed', event: 'High Heat', amount: 25, note: 'High temp relief triggered', icon: 'thermometer' },
+  { day: 'Thu', event: 'Clear Sky', amount: 0, note: 'No disruptions detected', icon: 'sunny' },
+  { day: 'Fri', event: 'Heavy Rain', amount: 40, note: 'Primary disruption covered', icon: 'rainy' },
 ];
 
 const WEEKLY_HISTORY = [
@@ -89,6 +90,7 @@ export default function AnalyticsScreen({ zone, fleet, onNavigate }: Props) {
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const chartAnims = useRef(MONTHLY_HISTORY.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }).start();
@@ -98,6 +100,15 @@ export default function AnalyticsScreen({ zone, fleet, onNavigate }: Props) {
         Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
       ])
     ).start();
+
+    Animated.stagger(150, chartAnims.map((anim, i) => 
+      Animated.spring(anim, {
+        toValue: MONTHLY_HISTORY[i].shieldLevel,
+        useNativeDriver: false,
+        damping: 12,
+        stiffness: 90
+      })
+    )).start();
   }, []);
 
   return (
@@ -144,16 +155,26 @@ export default function AnalyticsScreen({ zone, fleet, onNavigate }: Props) {
             {DAILY_STORY.map((item, i) => {
               const isActive = item.amount > 0;
               return (
-                <View key={i} style={[styles.dayCard, isActive && styles.dayCardActive]}>
-                  {isActive && <View style={styles.glowEffect} />}
+                <LinearGradient 
+                  key={i}
+                  colors={isActive ? ['#022C22', '#064E3B'] : ['#FFF', '#FFF']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={[styles.dayCard, isActive && styles.dayCardActive]}
+                >
+                  {isActive && (
+                    <>
+                      <View style={styles.glowEffect} />
+                      <View style={styles.decorCircleLarge} />
+                    </>
+                  )}
                   
                   <View style={styles.dayTop}>
-                    <View style={[styles.datePill, isActive && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
+                    <View style={[styles.datePill, isActive && { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
                       <Text style={[styles.dayText, isActive && styles.dayTextActive]}>{item.day}</Text>
                     </View>
                     <View style={[styles.iconCircle, isActive && styles.iconCircleActive]}>
                       <Ionicons
-                        name={isActive ? "shield-checkmark" : "shield-outline"}
+                        name={item.icon as any}
                         size={16}
                         color={isActive ? "#10B981" : theme.colors.textMuted}
                       />
@@ -168,14 +189,22 @@ export default function AnalyticsScreen({ zone, fleet, onNavigate }: Props) {
                   <View style={[styles.dayDivider, isActive && styles.dayDividerActive]} />
                   
                   <View style={styles.dayBottom}>
-                    <Text style={[styles.amountLabel, isActive && styles.amountLabelActive]}>
-                      {isActive ? 'PAYOUT TRIGGERED' : 'STATUS'}
-                    </Text>
+                    <View>
+                      <Text style={[styles.amountLabel, isActive && styles.amountLabelActive]}>
+                        {isActive ? 'PAYOUT EXECUTED' : 'STATUS'}
+                      </Text>
+                      {isActive && (
+                         <View style={styles.oracleBadge}>
+                            <Ionicons name="hardware-chip" size={10} color="#10B981" />
+                            <Text style={styles.oracleText}>Verified by Oracle</Text>
+                         </View>
+                      )}
+                    </View>
                     <Text style={[styles.dayAmount, isActive && styles.dayAmountActive]}>
                       {isActive ? `+₹${item.amount}` : 'SECURED'}
                     </Text>
                   </View>
-                </View>
+                </LinearGradient>
               );
             })}
           </ScrollView>
@@ -205,24 +234,41 @@ export default function AnalyticsScreen({ zone, fleet, onNavigate }: Props) {
             ))}
           </View>
 
-          {/* Monthly History Chart View */}
-          <View style={styles.chartCard}>
-            <Text style={styles.chartTitle}>Monthly History</Text>
-            <View style={styles.chartRow}>
-              {MONTHLY_HISTORY.map((m, i) => (
-                <View key={i} style={styles.chartCol}>
-                  <View style={styles.barContainer}>
-                    <View style={[styles.barFill, { 
-                      height: `${m.shieldLevel * 100}%`, 
-                      backgroundColor: i === 3 ? theme.colors.primary : '#E4E7EC' 
-                    }]} />
+          {/* Monthly Resilience Trend Animated Chart */}
+          <View style={styles.chartCardModern}>
+            <View style={styles.chartHeader}>
+               <View>
+                 <Text style={styles.chartTitleModern}>Resilience Trend</Text>
+                 <Text style={styles.chartSubModern}>Average coverage of ₹178/mo</Text>
+               </View>
+               <Ionicons name="stats-chart" size={20} color={theme.colors.primary} />
+            </View>
+            
+            <View style={styles.chartRowModern}>
+              {/* Background Gridlines */}
+              <View style={styles.chartGridLine} />
+              <View style={[styles.chartGridLine, { top: '50%' }]} />
+              
+              {MONTHLY_HISTORY.map((m, i) => {
+                const isActive = i === 3;
+                return (
+                  <View key={i} style={styles.chartColModern}>
+                    <Text style={[styles.chartValTooltip, isActive && styles.chartValTooltipActive]}>
+                      ₹{m.amount}
+                    </Text>
+                    <View style={[styles.barContainerModern, isActive && styles.barContainerActive]}>
+                      <Animated.View style={[
+                        styles.barFillModern, 
+                        isActive && styles.barFillModernActive,
+                        { height: chartAnims[i].interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }
+                      ]} />
+                    </View>
+                    <Text style={[styles.chartMonthLabelModern, isActive && styles.chartMonthLabelActive]}>
+                      {m.month}
+                    </Text>
                   </View>
-                  <Text style={styles.chartMonthLabel}>{m.month}</Text>
-                  <Text style={[styles.chartVal, i === 3 && { color: theme.colors.primary, fontWeight: '900' }]}>
-                    ₹{m.amount}
-                  </Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
 
@@ -317,18 +363,22 @@ const styles = StyleSheet.create({
   // Daily Scroll
   horizontalScroll: { paddingHorizontal: 24, gap: 16, paddingBottom: 24 },
   dayCard: { 
-    width: CARD_WIDTH, backgroundColor: '#FFF', borderRadius: 28, padding: 24, 
+    width: CARD_WIDTH, borderRadius: 28, padding: 24, 
     borderWidth: 1, borderColor: '#EAECF0',
     shadowColor: '#101828', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
     position: 'relative', overflow: 'hidden'
   },
   dayCardActive: { 
-    backgroundColor: '#0F172A', borderColor: '#0F172A',
-    shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8
+    borderColor: '#064E3B',
+    shadowColor: '#10B981', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 10
   },
   glowEffect: { 
-    position: 'absolute', top: -40, right: -40, width: 120, height: 120, 
-    borderRadius: 60, backgroundColor: '#10B981', opacity: 0.1 
+    position: 'absolute', top: -60, right: -60, width: 200, height: 200, 
+    borderRadius: 100, backgroundColor: '#10B981', opacity: 0.15 
+  },
+  decorCircleLarge: {
+     position: 'absolute', bottom: -30, left: -30, width: 120, height: 120,
+     borderRadius: 60, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.1)'
   },
   dayTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, zIndex: 1 },
   datePill: { backgroundColor: '#F2F4F7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
@@ -344,6 +394,8 @@ const styles = StyleSheet.create({
   dayBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 1 },
   amountLabel: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1, marginBottom: 4 },
   amountLabelActive: { color: 'rgba(255,255,255,0.5)' },
+  oracleBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, alignSelf: 'flex-start' },
+  oracleText: { fontSize: 9, color: '#10B981', fontWeight: '800', textTransform: 'uppercase' },
   dayAmount: { fontSize: 28, fontWeight: '900', color: theme.colors.textMuted },
   dayAmountActive: { color: '#10B981' },
   dayNote: { fontSize: 13, color: theme.colors.textSub, lineHeight: 20 },
@@ -358,15 +410,24 @@ const styles = StyleSheet.create({
   weekResult: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   weekAmount: { fontSize: 15, fontWeight: '800', color: theme.colors.textMuted },
 
-  // Chart Card
-  chartCard: { marginHorizontal: 24, backgroundColor: '#FFF', borderRadius: 28, padding: 24, marginBottom: 32, borderWidth: 1, borderColor: '#EAECF0' },
-  chartTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.primary, marginBottom: 24 },
-  chartRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingHorizontal: 4 },
-  chartCol: { alignItems: 'center', width: 50 },
-  barContainer: { height: 60, width: 12, backgroundColor: '#F2F4F7', borderRadius: 6, justifyContent: 'flex-end', marginBottom: 10, overflow: 'hidden' },
-  barFill: { width: '100%', borderRadius: 6 },
-  chartMonthLabel: { fontSize: 10, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 4 },
-  chartVal: { fontSize: 10, color: theme.colors.textMuted },
+  chartCardModern: { 
+    marginHorizontal: 24, backgroundColor: '#FFF', borderRadius: 28, padding: 24, marginBottom: 32, 
+    borderWidth: 1, borderColor: '#EAECF0', shadowColor: '#101828', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2
+  },
+  chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
+  chartTitleModern: { fontSize: 16, fontWeight: '900', color: theme.colors.primary, marginBottom: 4 },
+  chartSubModern: { fontSize: 13, color: theme.colors.textMuted, fontWeight: '600' },
+  chartRowModern: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, paddingHorizontal: 16, position: 'relative' },
+  chartGridLine: { position: 'absolute', left: 0, right: 0, top: 0, height: 1, backgroundColor: '#EAECF0' },
+  chartColModern: { alignItems: 'center', flex: 1, zIndex: 1 },
+  chartValTooltip: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, marginBottom: 6 },
+  chartValTooltipActive: { color: '#10B981', fontSize: 12, fontWeight: '900', marginBottom: 6 },
+  barContainerModern: { height: 70, width: 10, backgroundColor: '#F9FAFB', borderRadius: 5, justifyContent: 'flex-end', marginBottom: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#EAECF0' },
+  barContainerActive: { borderColor: 'rgba(16, 185, 129, 0.2)', backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+  barFillModern: { width: '100%', borderRadius: 5, backgroundColor: '#E4E7EC' },
+  barFillModernActive: { backgroundColor: '#10B981', borderRadius: 5 },
+  chartMonthLabelModern: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted },
+  chartMonthLabelActive: { color: theme.colors.primary, fontWeight: '900' },
 
   // Viz Card
   vizCard: { marginHorizontal: 24, backgroundColor: '#F8F9FC', borderRadius: 28, padding: 24, marginBottom: 40 },

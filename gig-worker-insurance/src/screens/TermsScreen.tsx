@@ -38,19 +38,27 @@ const TERMS_SECTIONS = [
     body: 'Humsafar explicitly excludes coverage for any losses directly or indirectly arising from: (a) War, hostilities, or acts of foreign enemies; (b) Ionizing radiation or contamination by radioactivity; (c) Sovereign acts including nationalization, confiscation or requisition; (d) Intentional fraud, GPS spoofing, or criminal conduct; (e) Use of intoxicating liquor or prohibited substances; and (f) Any loss covered by separate Health, Life, or Personal Accident insurance.',
   },
   {
-    title: '7. DATA PRIVACY & SECURITY',
-    body: 'We adhere to a "Privacy-First" model under the Digital Personal Data Protection Act of India. We collect only necessary telemetry (Identity, Fleet, Geofence presence). Your data is encrypted and never sold to third-party advertisers.',
+    title: '7. PRIVACY: WHAT WE COLLECT',
+    body: 'We adhere to a "Privacy-First" model under the DPDP Act of India. We only collect location telemetry, fleet status, and OS-level device integrity flags exclusively during an active shift. We NEVER track you off-shift or sell your data to third parties.',
   },
   {
-    title: '8. LIMITATION OF LIABILITY',
+    title: '8. PRIVACY: ANTI-FRAUD & TELEMETRY',
+    body: 'To protect the community fund, background location data evaluates physical speed and altitude variance to detect GPS spoofing. Anomalous telemetry is instantly rejected by our Isolation Forest fraud framework.',
+  },
+  {
+    title: '9. PRIVACY: AUTOMATED PAYOUTS',
+    body: 'Financial payouts are decided through Automated Decision Making (Zero-Touch parametric triggers). Your encrypted location is instantly compared against OpenWeather Oracles without human bias.',
+  },
+  {
+    title: '10. LIMITATION OF LIABILITY',
     body: 'To the maximum extent permitted by law, Humsafar\'s liability is capped at 5x the weekly premium paid. We are not liable for consequential damages, platform downtime due to external server failures, or inaccuracies in third-party meteorological data.',
   },
   {
-    title: '9. GOVERNING LAW & JURISDICTION',
+    title: '11. GOVERNING LAW & JURISDICTION',
     body: 'These Terms shall be governed by and defined following the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in Bangalore, Karnataka.',
   },
   {
-    title: '10. MODIFICATIONS & SEVERABILITY',
+    title: '12. MODIFICATIONS & SEVERABILITY',
     body: 'We reserve the right to modify these terms at any time. If any part of these terms is found to be unenforceable, the remainder shall continue in full force and effect.',
   },
 ];
