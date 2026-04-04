@@ -14,40 +14,44 @@ interface Props {
 
 const TERMS_SECTIONS = [
   {
-    title: '1. Acceptance of Terms',
-    body: 'By creating an account and using GuideWire services, you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree with any part of these terms, you may not use our services.',
+    title: '1. AGREEMENT TO TERMS',
+    body: 'These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("User" or "you") and GigShield ("Company," "we," "us," or "our"). By accessing the platform, you acknowledge that you have read, understood, and agreed to be bound by all of these Terms of Service.',
   },
   {
-    title: '2. Insurance Coverage',
-    body: 'GuideWire provides parametric weather-based insurance for gig workers. Coverage is automatically triggered when predefined weather conditions (temperature, rainfall, wind speed) exceed configured thresholds at your registered location. Payouts are processed automatically within 24–48 hours of a qualifying event.',
+    title: '2. DEFINITIONS',
+    body: '● "Parametric Trigger": A predefined environmental or social event (e.g., Rain >50mm/hr) that automatically initiates a payout. \n● "GScore": A proprietary ML-driven reliability metric used for risk profiling. \n● "Zero-Touch": Fully automated claim processing without human intervention.',
   },
   {
-    title: '3. Location Data Usage',
-    body: 'We collect and use your location data solely for the purpose of determining weather conditions at your work area and triggering eligible insurance payouts. Your location data is encrypted and stored securely. We do not sell or share your location data with third parties for advertising purposes.',
+    title: '3. SCOPE OF PARAMETRIC COVERAGE',
+    body: 'GigShield provides automated income protection triggered exclusively by verified environmental data (Rain, Heat, AQI, Floods) and social disruptions (Curfews, Strikes). Performance is monitored within the User\'s active "Work Zone" geofence. Coverage is subject to a 2-hour cooldown period between identical trigger events.',
   },
   {
-    title: '4. Premium Payments',
-    body: 'Policy premiums are charged on a per-day or monthly basis depending on your selected plan. Premiums are non-refundable once coverage has been activated for a given period. Failure to pay premiums on time may result in a lapse of coverage.',
+    title: '4. DYNAMIC PRICING & BILLING',
+    body: 'Premiums are determined dynamically using our ML Risk Intelligence models. Billing occurs on a weekly recurring basis. Users acknowledge that premiums may fluctuate based on hyper-local risk exposure and GScore adjustments. All premium payments are final and non-refundable upon commencement of the coverage week.',
   },
   {
-    title: '5. Claims & Payouts',
-    body: 'Claims are automatically evaluated and processed based on verified weather data from our partner meteorological services. You will receive notifications about qualifying events and payout status. Disputes regarding payouts can be submitted through the app within 30 days of the event.',
+    title: '5. AUTOMATED CLAIMS & SETTLEMENT',
+    body: 'Claims are processed via a "Zero-Touch" automated pipeline. Upon verification of a parametric trigger, funds are settled instantly via UPI. User acknowledges that payouts are subject to successful "Isolation Forest" fraud validation and identity verification.',
   },
   {
-    title: '6. Privacy Policy',
-    body: 'We collect personal information (name, email, phone number, location) to provide our insurance services. Your data is protected using industry-standard encryption. You may request deletion of your data at any time by contacting support. We comply with applicable data protection regulations including GDPR and India\'s Digital Personal Data Protection Act.',
+    title: '6. COMPREHENSIVE EXCLUSIONS',
+    body: 'GigShield explicitly excludes coverage for any losses directly or indirectly arising from: (a) War, hostilities, or acts of foreign enemies; (b) Ionizing radiation or contamination by radioactivity; (c) Sovereign acts including nationalization, confiscation or requisition; (d) Intentional fraud, GPS spoofing, or criminal conduct; (e) Use of intoxicating liquor or prohibited substances; and (f) Any loss covered by separate Health, Life, or Personal Accident insurance.',
   },
   {
-    title: '7. Account Termination',
-    body: 'You may terminate your account at any time through the app settings. GuideWire reserves the right to suspend or terminate accounts that violate these terms, engage in fraudulent activity, or misuse the platform.',
+    title: '7. DATA PRIVACY & SECURITY',
+    body: 'We adhere to a "Privacy-First" model under the Digital Personal Data Protection Act of India. We collect only necessary telemetry (Identity, Fleet, Geofence presence). Your data is encrypted and never sold to third-party advertisers.',
   },
   {
-    title: '8. Limitation of Liability',
-    body: 'GuideWire\'s liability is limited to the coverage amount specified in your active policy. We are not liable for indirect, incidental, or consequential damages arising from the use of our services.',
+    title: '8. LIMITATION OF LIABILITY',
+    body: 'To the maximum extent permitted by law, GigShield\'s liability is capped at 5x the weekly premium paid. We are not liable for consequential damages, platform downtime due to external server failures, or inaccuracies in third-party meteorological data.',
   },
   {
-    title: '9. Changes to Terms',
-    body: 'We may update these terms from time to time. You will be notified of material changes via email or in-app notification. Continued use of the service after changes constitutes acceptance of the updated terms.',
+    title: '9. GOVERNING LAW & JURISDICTION',
+    body: 'These Terms shall be governed by and defined following the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in Bangalore, Karnataka.',
+  },
+  {
+    title: '10. MODIFICATIONS & SEVERABILITY',
+    body: 'We reserve the right to modify these terms at any time. If any part of these terms is found to be unenforceable, the remainder shall continue in full force and effect.',
   },
 ];
 
