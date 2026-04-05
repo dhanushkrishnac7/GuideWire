@@ -10,3 +10,16 @@ npm-debug.log*
 .env.local
 .env.*.local
 coverage/
+
+# IDE and tool configs
+.kiro/
+.vscode/
+
+# Utility scripts (local only)
+restructure.js
+
+# Root-level files not needed in repo
+PHASE_2_DOCUMENTATION.txt
+SIMULATION_DEMO_GUIDE.md
+VERCEL_DEPLOYMENT_GUIDE.md
+VIDEO_SCRIPT_2MIN.md
